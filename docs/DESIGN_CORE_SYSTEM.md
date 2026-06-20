@@ -1,212 +1,222 @@
 # 디자인 코어 시스템 — 말그림(MalGrim)
 
 > 기준 문서: [docs/PRD.md](PRD.md)  
-> 참고 방향: GitHub 제품 UI와 Primer Design System의 구조, 밀도, 접근성, 개발자 도구 감각을 말그림에 맞게 재해석한다.
+> 테마 방향: **Neo Brutalism / Raw Product UI**
+> 적용 범위: UI 시각 언어, 레이아웃, 상태 표현, 컴포넌트 규칙. 이 문서는 디자인 기준만 정의하며 앱 구현 파일을 직접 변경하지 않는다.
 
 ---
 
-## 1. 디자인 목표
+## 1. 디자인 선언
 
-말그림은 마케팅 페이지가 아니라 회의와 설계 논의 중 바로 쓰는 생산성 도구다. 첫 화면은 제품 설명보다 작업 공간이어야 하며, 사용자는 들어오자마자 명령을 말하거나 입력하고, 결과 다이어그램을 확인하고, 도구 호출 로그를 추적할 수 있어야 한다.
+말그림은 조용한 SaaS 대시보드가 아니다. 사용자가 말하면 구조가 즉시 화면에 찍히는 도구다. 따라서 UI도 부드럽고 숨는 인터페이스보다, **강한 선, 평면 색, 큰 대비, 즉각적인 상태 변화**를 가진 네오 브루털리즘으로 간다.
 
-### 핵심 원칙
+핵심 이미지는 다음과 같다.
 
-1. **작업 우선**: 화면의 중심은 다이어그램 캔버스다. 설명 문구, 장식, 랜딩형 히어로는 최소화한다.
-2. **개발자 도구다운 신뢰감**: GitHub처럼 차분한 중립 배경, 명확한 경계선, 작은 밀도의 컨트롤을 사용한다.
-3. **음성 상태의 가시성**: 듣는 중, 처리 중, 도구 호출 중, 확인 대기 상태가 색상과 텍스트로 즉시 구분되어야 한다.
-4. **모델 행동의 투명성**: Copilot SDK 에이전트가 어떤 도구를 호출했는지 로그로 노출한다.
-5. **실패해도 복구 가능**: 렌더 실패, 음성 인식 실패, 모호한 참조, 위험 작업 확인을 각각 독립 상태로 설계한다.
+```text
+말이 떨어진다 -> 박스가 꽂힌다 -> 선이 연결된다 -> 로그가 찍힌다
+```
 
----
-
-## 2. GitHub/Primer 참고 포인트
-
-이 프로젝트는 GitHub를 시각적으로 복제하지 않는다. 대신 GitHub 제품 UI에서 유효한 패턴을 가져온다.
-
-| 참고 요소 | 말그림 적용 |
-|---|---|
-| Primer Product UI | 버튼, 입력, 배지, 알림, 사이드 패널의 기본 구조 참고 |
-| Primer Primitives | 색상, 간격, 타이포그래피를 토큰 기반으로 관리 |
-| Octicons | 개발자 도구에 익숙한 아이콘 언어 사용. 구현 시 `@primer/octicons-react` 또는 이미 설치된 아이콘 라이브러리 사용 |
-| GitHub 작업 화면 | 헤더는 얇고, 본문은 작업 밀도 높게, 상태 정보는 배지/로그/작은 패널로 표현 |
-| GitHub Copilot UI | AI가 작업 중임을 스트리밍 텍스트와 단계별 로그로 보여주는 구조 참고 |
-
-참고 URL:
-
-- https://primer.style/
-- https://primer.style/product/
-- https://primer.style/product/primitives/
-- https://primer.style/octicons
-- https://github.com/
+제품은 거칠게 보여도 조잡하면 안 된다. 말그림의 브루털리즘은 장식적 유행이 아니라, 음성 명령과 AI 도구 호출을 사용자가 놓치지 않게 만드는 **고대비 작업 인터페이스**다.
 
 ---
 
-## 3. 제품 인상
+## 2. 디자인 원칙
 
-### 키워드
+### 2.1 Raw First
 
-- **Focused**: 회의 흐름을 끊지 않는 집중형 작업 도구
-- **Legible**: 다이어그램, 로그, 명령 결과가 빠르게 읽힘
-- **Trustworthy**: AI가 무슨 변경을 했는지 숨기지 않음
-- **Fast**: 음성 명령 이후 화면 변화가 즉시 느껴짐
-- **Calm**: 과한 장식보다 안정적인 인터페이스
+렌더링된 다이어그램, Mermaid 원문, 도구 호출 로그를 숨기지 않는다. AI가 바꾼 구조가 그대로 보이는 것이 말그림의 신뢰다.
 
-### 하지 말 것
+### 2.2 Loud State
 
-- 첫 화면을 랜딩 페이지처럼 만들지 않는다.
-- 그라데이션 배경, 큰 장식 카드, 과한 보라색 AI 테마로 덮지 않는다.
-- 다이어그램 작업 영역을 카드 안의 카드로 중첩하지 않는다.
-- 안내 문구로 화면을 설명하지 않는다. 상태와 컨트롤 자체가 이해되게 만든다.
+`듣는 중`, `해석 중`, `도구 적용 중`, `확인 필요`, `오류`는 작은 색 점으로 처리하지 않는다. 배경색, 굵은 테두리, 라벨, 움직임으로 강하게 드러낸다.
+
+### 2.3 Hard Geometry
+
+둥근 SaaS 카드 감성을 피한다. 사각형, 굵은 경계선, 분명한 그리드, 단단한 버튼을 사용한다.
+
+### 2.4 Useful Brutality
+
+모든 과격한 스타일은 기능을 설명해야 한다. 그림자, 색상, 두꺼운 선은 사용자의 다음 행동을 빠르게 찾게 만들 때만 쓴다.
+
+### 2.5 Voice Stage
+
+음성 입력 영역은 보조 폼이 아니라 무대다. 마이크 상태와 transcript는 캔버스만큼 중요하게 보인다.
+
+---
+
+## 3. 시각 키워드
+
+| 키워드 | 의미 | 적용 |
+|---|---|---|
+| Brutal | 숨기지 않는 구조 | 굵은 테두리, 명확한 패널 분할 |
+| Fast | 즉각적인 반응 | 상태 전환, 로그 append, 캔버스 highlight |
+| Mechanical | 도구 호출의 기계적 신뢰 | tool log를 터미널 출력처럼 표시 |
+| Playful | 말하면 그려지는 재미 | 강한 포인트 컬러, 눌리는 버튼, 큰 빈 상태 |
+| Legible | 회의 중 빠른 판독 | 높은 대비, 큰 명령 입력, 짧은 문구 |
 
 ---
 
 ## 4. 화면 구조
 
-### 기본 레이아웃
+첫 화면은 랜딩 페이지가 아니라 작업대다. 네오 브루털리즘의 강한 구획감을 이용해 기능을 한 번에 드러낸다.
 
 ```text
-┌────────────────────────────────────────────────────────────┐
-│ Top Bar: 제품명 / 세션 상태 / Export / Settings            │
-├────────────────────────────────────────────────────────────┤
-│ Command Bar: Mic / 텍스트 입력 / Submit / Listening 상태    │
-├─────────────────────────────┬──────────────────────────────┤
-│ Diagram Canvas              │ Agent + Tool Log Panel        │
-│                             │ - transcript                  │
-│                             │ - tool calls                  │
-│                             │ - confirmations/errors        │
-├─────────────────────────────┴──────────────────────────────┤
-│ Mermaid Source Drawer 또는 하단 접힘 패널                   │
-└────────────────────────────────────────────────────────────┘
++============================================================+
+| MALGRIM / SPEAKDRAW              LIVE SESSION      EXPORT  |
++============================================================+
+| MIC COMMAND STRIP                                          |
+| [REC]  결제 실패 분기를 추가해줘                    [RUN]  |
++======================================+=====================+
+|                                      | AGENT TRACE         |
+| DIAGRAM CANVAS                       | > create_diagram    |
+| bold border                          | > add_node          |
+| flat nodes                           | > connect           |
+|                                      |                     |
++======================================+=====================+
+| MERMAID SOURCE / COLLAPSED RAW OUTPUT                      |
++============================================================+
 ```
 
 ### 데스크톱
 
-- 전체 화면을 `100dvh`로 사용한다.
-- 좌측/중앙은 캔버스, 우측은 로그 패널로 둔다.
-- 권장 비율: 캔버스 `minmax(0, 1fr)`, 로그 패널 `360px`.
-- 캔버스는 넓고 비어 보여도 괜찮지만, 입력 영역과 로그는 항상 접근 가능해야 한다.
+- 전체 높이는 `100dvh`.
+- 상단 바 56px, 명령 스트립 76px, 하단 raw drawer 160px 이하.
+- 캔버스와 로그 패널은 굵은 경계선으로 나눈다.
+- 로그 패널 권장 폭은 `380px`.
+- 패널 사이 여백을 크게 두지 않는다. 선으로 구획한다.
 
-### 태블릿/좁은 화면
+### 좁은 화면
 
-- 로그 패널은 하단 탭 또는 드로어로 전환한다.
-- Command Bar는 2줄까지 허용한다.
-- 버튼 텍스트가 줄어들면 아이콘 우선, 툴팁으로 보완한다.
+- 로그 패널은 하단 raw drawer와 합쳐 탭으로 전환한다.
+- 명령 스트립은 2줄 허용.
+- 마이크 버튼과 실행 버튼은 항상 보인다.
 
 ### 모바일
 
-- MVP에서는 완전 최적화는 Non-goal이지만 깨지면 안 된다.
-- 캔버스 상단, 명령 입력 하단 고정, 로그는 접힘 패널로 둔다.
-- 다이어그램은 가로 스크롤 또는 fit-to-screen 토글을 제공한다.
+- MVP에서는 완전한 모바일 UX보다 깨지지 않는 구조를 우선한다.
+- 캔버스, 명령, 로그를 세로로 쌓는다.
+- 가로 스크롤을 허용하되 버튼과 입력은 viewport 안에 고정한다.
 
 ---
 
-## 5. 디자인 토큰
+## 5. 색상 시스템
 
-Primer의 토큰 철학을 따른다. 실제 구현에서는 CSS 변수로 먼저 정의하고, 필요하면 Primer 변수명과 매핑한다.
+부드러운 단색 팔레트가 아니라 **고대비 잉크 + 종이 + 형광 포인트**를 사용한다. 기본 배경은 완전 흰색보다 약간 따뜻한 종이색을 쓴다.
 
-### 색상
-
-말그림의 기본 테마는 라이트 모드 우선이다. GitHub 제품 화면처럼 중립 배경을 중심으로 두고, 상태색만 선명하게 사용한다.
+### 핵심 팔레트
 
 ```css
 :root {
-  --mg-bg-canvas: #ffffff;
-  --mg-bg-page: #f6f8fa;
-  --mg-bg-subtle: #f0f3f6;
-  --mg-bg-inset: #f6f8fa;
+  --mg-paper: #fff7d6;
+  --mg-paper-strong: #ffef9f;
+  --mg-ink: #111111;
+  --mg-ink-soft: #2b2b2b;
+  --mg-white: #ffffff;
 
-  --mg-fg-default: #1f2328;
-  --mg-fg-muted: #656d76;
-  --mg-fg-subtle: #6e7781;
-  --mg-fg-on-emphasis: #ffffff;
+  --mg-blue: #00a3ff;
+  --mg-green: #20e070;
+  --mg-yellow: #ffe14d;
+  --mg-red: #ff3b30;
+  --mg-pink: #ff4fd8;
+  --mg-purple: #8b5cf6;
 
-  --mg-border-default: #d0d7de;
-  --mg-border-muted: #d8dee4;
-  --mg-border-emphasis: #8c959f;
+  --mg-border: #111111;
+  --mg-shadow: #111111;
+  --mg-muted: #6f6a5f;
 
-  --mg-accent: #0969da;
-  --mg-accent-muted: #ddf4ff;
-  --mg-success: #1a7f37;
-  --mg-success-muted: #dafbe1;
-  --mg-attention: #9a6700;
-  --mg-attention-muted: #fff8c5;
-  --mg-danger: #cf222e;
-  --mg-danger-muted: #ffebe9;
-  --mg-ai: #8250df;
-  --mg-ai-muted: #f3efff;
-
-  --mg-focus: #0969da;
-  --mg-shadow-sm: 0 1px 0 rgba(31, 35, 40, 0.04);
-  --mg-shadow-md: 0 8px 24px rgba(140, 149, 159, 0.2);
+  --mg-bg-page: var(--mg-paper);
+  --mg-bg-panel: var(--mg-white);
+  --mg-fg-default: var(--mg-ink);
+  --mg-fg-muted: var(--mg-muted);
 }
 ```
 
-#### 사용 규칙
+### 상태 색상
 
-| 용도 | 색상 |
-|---|---|
-| 기본 페이지 배경 | `--mg-bg-page` |
-| 캔버스/패널 배경 | `--mg-bg-canvas` |
-| 기본 액션, 링크, 포커스 | `--mg-accent` |
-| 음성 듣는 중 | `--mg-ai` |
-| 도구 호출 성공 | `--mg-success` |
-| 사용자 확인 대기 | `--mg-attention` |
-| 삭제/렌더 실패/시크릿 오류 | `--mg-danger` |
+| 상태 | 색상 | 사용 방식 |
+|---|---|---|
+| 기본 액션 | `--mg-blue` | 실행 버튼, 링크, 포커스 |
+| 듣는 중 | `--mg-pink` | 마이크 스트립 배경, REC 배지 |
+| 해석 중 | `--mg-purple` | 에이전트 진행 상태 |
+| 도구 적용 성공 | `--mg-green` | 성공 로그, 완료 배지 |
+| 확인 필요 | `--mg-yellow` | 위험 작업 확인 패널 |
+| 오류/삭제 | `--mg-red` | 삭제 버튼, 렌더 실패, STT 실패 |
 
-### 다크 모드 준비 토큰
+### 금지
 
-4시간 MVP에서는 라이트 모드만 구현해도 된다. 다만 토큰은 다크 모드 확장이 가능하게 이름을 의미 기반으로 유지한다.
+- 유리 효과, blur overlay, 반투명 card 남용 금지
+- 은은한 회색 위주의 GitHub 기본 테마로 회귀 금지
+- 보라색 그라데이션 AI 배경 금지
+- 상태를 색상 하나로만 전달 금지. 텍스트와 아이콘을 함께 둔다.
 
-```css
-[data-theme="dark"] {
-  --mg-bg-canvas: #0d1117;
-  --mg-bg-page: #010409;
-  --mg-bg-subtle: #161b22;
-  --mg-bg-inset: #0d1117;
-  --mg-fg-default: #e6edf3;
-  --mg-fg-muted: #8b949e;
-  --mg-border-default: #30363d;
-  --mg-border-muted: #21262d;
-  --mg-accent: #2f81f7;
-  --mg-success: #3fb950;
-  --mg-attention: #d29922;
-  --mg-danger: #f85149;
-  --mg-ai: #a371f7;
-}
-```
+---
 
-### 타이포그래피
+## 6. 테두리와 그림자
 
-GitHub 제품 UI처럼 시스템 폰트를 사용한다. 한글 가독성을 위해 Apple SD Gothic Neo와 Noto Sans KR을 폴백에 포함한다.
+네오 브루털리즘의 핵심은 물리적인 면이다. 모든 주요 UI는 선과 그림자로 눌렀을 때의 감각을 만든다.
 
 ```css
 :root {
-  --mg-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", Helvetica, Arial, sans-serif;
-  --mg-font-mono: ui-monospace, SFMono-Regular, SFMono, Menlo, Consolas, "Liberation Mono", monospace;
+  --mg-border-width: 3px;
+  --mg-border-width-heavy: 4px;
+  --mg-shadow-hard: 6px 6px 0 var(--mg-shadow);
+  --mg-shadow-hard-sm: 3px 3px 0 var(--mg-shadow);
+  --mg-shadow-none: 0 0 0 transparent;
+  --mg-radius-none: 0;
+  --mg-radius-sm: 2px;
+}
+```
+
+규칙:
+
+- 주요 패널: `3px solid #111`, shadow `6px 6px 0 #111`
+- 버튼: `3px solid #111`, shadow `3px 3px 0 #111`
+- 버튼 active: `transform: translate(3px, 3px)`, shadow 제거
+- 모달/확인 패널: `4px solid #111`, shadow `8px 8px 0 #111`
+- radius는 0 또는 2px만 사용한다.
+
+---
+
+## 7. 타이포그래피
+
+부드러운 앱 폰트보다 간판 같은 명확함을 우선한다. 한글 가독성은 유지하되 제목과 버튼은 강하게 보인다.
+
+```css
+:root {
+  --mg-font-sans: "Arial", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  --mg-font-display: "Arial Black", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  --mg-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --mg-text-xs: 12px;
   --mg-text-sm: 14px;
   --mg-text-md: 16px;
   --mg-text-lg: 20px;
-  --mg-text-xl: 24px;
-
-  --mg-line-tight: 1.25;
-  --mg-line-default: 1.5;
+  --mg-text-xl: 28px;
+  --mg-text-xxl: 40px;
 }
 ```
 
-| 스타일 | 크기 | 용도 |
-|---|---:|---|
-| Caption | 12px | 로그 시간, 배지, 보조 메타 |
-| Body | 14px | 대부분의 UI 텍스트 |
-| Command | 16px | 음성/텍스트 명령 입력 |
-| Panel title | 14px, 600 | 패널 헤더 |
-| Page title | 16px, 600 | Top Bar 제품명 |
-| Diagram label | Mermaid 기본값 + 필요 시 14px | 노드 라벨 |
+| 스타일 | 크기 | 굵기 | 용도 |
+|---|---:|---:|---|
+| App title | 20px | 900 | 상단 제품명 |
+| Command text | 18px | 700 | 음성/텍스트 명령 |
+| Panel title | 14px | 900 | 패널 헤더 |
+| Body | 14px | 600 | 기본 UI |
+| Caption | 12px | 700 | 로그 메타, 상태 |
+| Raw code | 13px | 500 | Mermaid source, tool payload |
 
-### 간격과 크기
+규칙:
 
-4px 기반 스케일을 사용한다.
+- 제목은 모두 대문자 영문 또는 짧은 한글 명사형 사용 가능.
+- letter-spacing은 0으로 둔다.
+- 본문은 너무 두껍게 만들지 않는다. 중요한 라벨과 버튼에만 800 이상을 쓴다.
+- UI 내부에서 긴 설명문을 쓰지 않는다.
+
+---
+
+## 8. 간격과 그리드
+
+브루털리즘은 헐겁게 흩어지면 지저분해진다. 그리드는 엄격하게 둔다.
 
 ```css
 :root {
@@ -216,381 +226,355 @@ GitHub 제품 UI처럼 시스템 폰트를 사용한다. 한글 가독성을 위
   --mg-space-4: 16px;
   --mg-space-5: 24px;
   --mg-space-6: 32px;
-
-  --mg-radius-sm: 4px;
-  --mg-radius-md: 6px;
-  --mg-radius-lg: 8px;
-
-  --mg-control-sm: 28px;
-  --mg-control-md: 32px;
-  --mg-control-lg: 40px;
+  --mg-control-md: 40px;
+  --mg-control-lg: 52px;
 }
 ```
 
 규칙:
 
-- 주요 패널 간격: 16px
-- 버튼 높이: 기본 32px, 명령 입력 관련 40px
-- 카드/패널 반경: 최대 8px
-- 아이콘 버튼: 32px 정사각형
-- 패널 내부 리스트 행: 최소 36px
+- 패널 안쪽 padding: 16px
+- 패널 사이 간격: 12px 또는 굵은 border로 직접 분리
+- Command Strip 높이: 72px 이상
+- 로그 행 높이: 최소 44px
+- 아이콘 버튼: 40px 정사각형
+- 캔버스 툴바 버튼: 36px 이상
 
 ---
 
-## 6. 주요 컴포넌트 가이드
+## 9. 컴포넌트 가이드
 
-### Top Bar
+### 9.1 Top Bar
 
-목적: 현재 앱, 세션, 내보내기 액션을 제공한다.
-
-구성:
-
-- 좌측: `말그림` + 작은 상태 배지 `Unsaved session` 또는 `Live`
-- 중앙: 현재 다이어그램 제목 또는 빈 상태
-- 우측: Mermaid 복사, PNG 내보내기, 설정
+역할: 앱의 간판이자 현재 세션 상태 표시.
 
 스타일:
 
-- 높이 48px
-- 하단 1px border
-- 배경 `--mg-bg-canvas`
-- 제품명은 16px/600
-
-### Command Bar
-
-목적: 음성 우선 입력과 텍스트 폴백을 같은 중요도로 제공한다.
+- 배경 `--mg-ink`
+- 텍스트 `--mg-paper`
+- 높이 56px
+- 하단 `4px solid --mg-border`
+- 제품명은 `MALGRIM / 말그림`처럼 강하게 표기
 
 구성:
 
-- 마이크 토글 버튼
-- 텍스트 입력창
-- 전송 버튼
-- 현재 상태 배지: `Idle`, `Listening`, `Thinking`, `Applying tools`, `Confirm required`
+- 좌측: 제품명
+- 중앙: 현재 다이어그램 제목
+- 우측: `COPY`, `EXPORT PNG`, `SETTINGS`
 
-상태:
+### 9.2 Command Strip
 
-| 상태 | UI |
-|---|---|
-| Idle | 기본 테두리, 마이크 아이콘 |
-| Listening | AI 보라색 테두리 + 작은 파형 또는 점 애니메이션 |
-| Thinking | 입력 disabled, Copilot/agent 아이콘, 진행 텍스트 |
-| Confirm required | 노란 배지 + 확인/취소 버튼 |
-| Error | 빨간 테두리 + 짧은 오류 메시지 |
+역할: 앱에서 가장 강한 인터랙션 영역. 사용자가 말하고, transcript를 보고, 실행하는 곳.
 
-### Diagram Canvas
+스타일:
 
-목적: 현재 IR이 Mermaid로 렌더링된 결과를 보여준다.
+- 배경 기본 `--mg-yellow`
+- Listening 상태 `--mg-pink`
+- Thinking 상태 `--mg-purple` + 흰 글자
+- `4px solid --mg-border`
+- 내부 입력은 흰 배경, 굵은 테두리
 
-구성:
-
-- 캔버스 툴바: Fit, Zoom in, Zoom out, Reset, Copy Mermaid
-- 렌더 영역
-- 빈 상태
-- 렌더 실패 상태
-
-빈 상태 문구:
+상태별 예시:
 
 ```text
-말하거나 입력해서 다이어그램을 시작하세요.
+[REC] 듣는 중       "온라인 쇼핑몰 주문 흐름을 그려줘"       [STOP]
+[AI]  해석 중       create_diagram 준비 중                    [...]
+[OK]  적용 완료     노드 4개, 연결 3개 추가                   [RUN]
 ```
 
-렌더 실패 상태:
+### 9.3 Diagram Canvas
 
-- 실패 메시지
-- Mermaid 원문 보기 버튼
-- 마지막 정상 렌더로 돌아가기 버튼이 있으면 좋다.
+역할: 현재 다이어그램의 무대.
 
-### Agent + Tool Log Panel
+스타일:
 
-목적: AI의 작업을 투명하게 보여준다.
+- 흰 배경
+- `4px solid --mg-border`
+- shadow `6px 6px 0 --mg-shadow`
+- 빈 상태에서는 중앙에 큰 문구 대신 짧은 명령 예시 1개만 둔다.
 
-로그 행 구조:
+빈 상태:
 
 ```text
-[도구 아이콘] add_node
-결제 실패 노드를 추가함
-12:41:03 · success
+말하면 여기에 그려집니다.
 ```
 
-도구별 아이콘 권장:
+렌더 갱신:
 
-| 도구 | 아이콘 |
-|---|---|
-| `create_diagram` | project, file, apps |
-| `add_node` | plus-circle |
-| `connect` | arrow-right, arrow-both |
-| `relabel` | pencil |
-| `remove` | trash |
-| `set_direction` | arrow-switch |
-| `switch_type` | git-compare 또는 arrow-switch |
-| `export` | download |
-| `clear` | alert 또는 trash |
+- 캔버스 외곽을 `--mg-green`으로 300ms flash
+- 레이아웃 크기는 흔들리지 않게 유지
 
-### Confirmation Dialog
+### 9.4 Agent Trace Panel
 
-위험 작업은 즉시 실행하지 않는다.
+역할: AI가 실제로 수행한 작업의 블랙박스를 없앤다.
 
-적용 대상:
+스타일:
 
-- 전체 삭제
-- 큰 범위 삭제
-- 타입 전환으로 기존 구조가 많이 바뀌는 경우
+- 터미널과 영수증 사이 느낌
+- 배경 `--mg-ink`
+- 텍스트 `--mg-green` 또는 `--mg-paper`
+- 로그 행은 monospace 사용 가능
+- 각 tool call은 번호를 붙인다.
 
-문구 예시:
+예시:
+
+```text
+01 > create_diagram(flowchart)  OK
+02 > add_node("장바구니")       OK
+03 > connect(n1, n2)            OK
+04 > relabel("장바구니")       OK
+```
+
+### 9.5 Raw Mermaid Drawer
+
+역할: 산출물을 숨기지 않고 바로 복사 가능하게 한다.
+
+스타일:
+
+- 하단 접힘 패널
+- 흰 배경 또는 검정 배경 중 하나로 고정
+- 코드 영역은 `--mg-font-mono`
+- `COPY RAW` 버튼을 우측 상단 고정
+
+### 9.6 Confirmation Dialog
+
+위험 작업은 가장 강하게 보여야 한다.
+
+스타일:
+
+- 배경 `--mg-yellow`
+- `4px solid --mg-border`
+- shadow `8px 8px 0 --mg-shadow`
+- 제목은 20px/900
+- 삭제 버튼은 `--mg-red`
+
+문구:
 
 ```text
 전체 다이어그램을 삭제할까요?
-이 작업은 현재 세션의 모든 노드와 연결을 제거합니다.
+현재 세션의 모든 노드와 연결이 사라집니다.
 ```
 
-버튼:
+버튼 순서:
 
-- 취소: 기본 버튼
-- 삭제: danger 버튼
+```text
+[취소] [삭제]
+```
 
-### Mermaid Source Drawer
-
-목적: 개발자/기획자가 문서에 바로 붙여넣을 수 있게 한다.
-
-규칙:
-
-- 기본은 접힘
-- `Copy` 버튼을 항상 제공
-- 코드 영역은 monospace 12px 또는 13px
-- Mermaid 원문은 읽기 전용
+취소를 기본 포커스로 둔다.
 
 ---
 
-## 7. 버튼과 입력 규칙
+## 10. 버튼 규칙
 
-### 버튼 종류
+버튼은 누를 수 있는 물체처럼 보여야 한다.
 
-| 종류 | 용도 | 스타일 |
+```css
+.mg-button {
+  border: 3px solid #111;
+  box-shadow: 3px 3px 0 #111;
+  border-radius: 0;
+  font-weight: 900;
+  min-height: 40px;
+}
+
+.mg-button:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+```
+
+| 종류 | 배경 | 용도 |
 |---|---|---|
-| Primary | 명령 전송, 주요 확인 | 파란 배경, 흰 글자 |
-| Secondary | 복사, 내보내기, 확대 | 흰 배경, 회색 테두리 |
-| Invisible/Icon | 툴바의 작은 액션 | 배경 없음, hover 시 subtle |
-| Danger | 삭제 확정 | 빨간 배경 또는 빨간 테두리 |
-| AI | 음성 듣기/에이전트 실행 | 보라색 강조, 남용 금지 |
+| Primary | `--mg-blue` | RUN, 주요 실행 |
+| Voice | `--mg-pink` | REC, STOP |
+| Success | `--mg-green` | 완료, 복사 성공 |
+| Warning | `--mg-yellow` | 확인 필요 |
+| Danger | `--mg-red` | 삭제, 실패 |
+| Plain | `--mg-white` | 보조 액션 |
 
-### 입력창
+아이콘 버튼도 텍스트 버튼과 같은 물리감을 가져야 한다. 툴팁 또는 `aria-label`은 필수다.
 
-- 명령 입력은 16px로 둔다.
-- placeholder는 짧게 유지한다.
-- 추천 placeholder:
+---
+
+## 11. 입력 규칙
+
+명령 입력은 일반 폼이 아니라 prompt box다.
+
+```css
+.mg-command-input {
+  border: 3px solid #111;
+  background: #fff;
+  color: #111;
+  min-height: 52px;
+  font-size: 18px;
+  font-weight: 700;
+}
+```
+
+placeholder:
 
 ```text
 예: 결제 실패 분기를 추가해줘
 ```
 
-- 음성 인식 transcript는 입력창에 임시로 표시하되, 확정 전에는 muted 스타일로 구분한다.
+규칙:
+
+- transcript 임시 텍스트는 기울임보다 배경색 차이로 구분한다.
+- disabled 상태에서도 텍스트 대비를 충분히 유지한다.
+- 포커스는 `outline: 4px solid --mg-blue`처럼 강하게 보인다.
 
 ---
 
-## 8. 상태 배지
+## 12. 상태 표현
 
-상태 배지는 작은 텍스트와 색상으로 앱의 흐름을 알려준다.
+상태는 배지가 아니라 작은 표지판처럼 보이게 한다.
 
-| 상태 | 배경 | 텍스트 |
-|---|---|---|
-| Idle | subtle | 대기 중 |
-| Listening | ai-muted | 듣는 중 |
-| Thinking | accent-muted | 해석 중 |
-| Tooling | success-muted | 적용 중 |
-| Confirm | attention-muted | 확인 필요 |
-| Error | danger-muted | 오류 |
+| 상태 | 라벨 | 배경 | 테두리 |
+|---|---|---|---|
+| 대기 | `IDLE` | white | ink |
+| 듣는 중 | `REC` | pink | ink |
+| 해석 중 | `AI RUNNING` | purple | ink |
+| 도구 적용 | `APPLYING` | blue | ink |
+| 완료 | `DONE` | green | ink |
+| 확인 필요 | `CONFIRM` | yellow | ink |
+| 오류 | `ERROR` | red | ink |
 
-배지 규칙:
+규칙:
 
-- 높이 20px 또는 24px
-- 글자 12px
-- 아이콘은 선택 사항
-- 한 화면에서 동시에 3개 이상 상태 배지를 남발하지 않는다.
+- 상태 라벨은 12px/900.
+- 가능한 영문 대문자 + 짧은 한글 보조 텍스트 조합을 쓴다.
+- 색상만으로 의미를 전달하지 않는다.
 
 ---
 
-## 9. 다이어그램 스타일
+## 13. 다이어그램 스타일
 
-Mermaid 기본 렌더를 사용하되, 앱 테마와 어긋나지 않게 변수만 조정한다.
+Mermaid 결과도 앱 테마와 맞아야 한다. 기본 Mermaid의 부드러운 느낌을 줄이고 노드와 선을 강하게 만든다.
 
 ### Flowchart
 
-- 기본 방향: `TD`
-- 노드 배경: 흰색
-- 노드 테두리: `--mg-border-emphasis`
-- 주요 시작/끝 노드: success 계열 약한 배경
-- 의사결정 노드: attention 계열 약한 배경
-- 실패/오류 노드: danger 계열 약한 배경
+- 노드 fill: `#ffffff`
+- 노드 stroke: `#111111`
+- stroke width: `3px`
+- edge stroke: `#111111`
+- decision node fill: `#ffe14d`
+- error/failure node fill: `#ffb3ad`
+- success/end node fill: `#b6f7c8`
 
 ### Sequence Diagram
 
-- 참여자 박스는 중립 배경
-- 메시지는 기본 선명도 유지
-- return 메시지는 muted 스타일
-- 에러/실패 메시지는 danger 색상을 사용할 수 있다.
+- participant fill: `#fff7d6`
+- participant border: `#111111`
+- actor line: `#111111`
+- message line: `#111111`
+- note fill: `#ffe14d`
 
-### Mermaid themeVariables 예시
+예시:
 
 ```ts
 const mermaidThemeVariables = {
-  background: "#ffffff",
+  background: "#fff7d6",
   primaryColor: "#ffffff",
-  primaryBorderColor: "#8c959f",
-  primaryTextColor: "#1f2328",
-  lineColor: "#656d76",
-  secondaryColor: "#f6f8fa",
-  tertiaryColor: "#ddf4ff",
-  fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+  primaryBorderColor: "#111111",
+  primaryTextColor: "#111111",
+  lineColor: "#111111",
+  secondaryColor: "#ffe14d",
+  tertiaryColor: "#20e070",
+  fontFamily: "Arial, Apple SD Gothic Neo, Noto Sans KR, sans-serif",
 };
 ```
 
 ---
 
-## 10. 음성 UX 규칙
+## 14. 음성 UX
 
-음성 입력은 말그림의 핵심 차별점이다. 사용자는 앱이 듣고 있는지, 이해했는지, 적용했는지를 놓치면 안 된다.
+음성은 말그림의 주연이다. 마이크가 켜졌는지 작게 보여주면 안 된다.
 
-### 음성 입력 흐름
+### 흐름
 
 ```text
-Idle → Listening → Transcript ready → Thinking → Tool calls → Render updated
+IDLE -> REC -> TRANSCRIPT -> AI RUNNING -> APPLYING -> DONE
 ```
 
-### 피드백 원칙
+### 피드백
 
-- 마이크가 켜지면 Command Bar 전체가 미세하게 강조된다.
-- transcript는 사용자가 방금 말한 내용으로 보이게 한다.
-- 에이전트가 처리 중일 때는 캔버스를 막지 않는다.
-- 도구 호출은 로그 패널에 즉시 추가한다.
-- 렌더가 갱신되면 캔버스에 짧은 highlight를 준다.
+- REC 상태에서는 Command Strip 전체 색이 바뀐다.
+- transcript는 입력창 안에 크게 표시한다.
+- AI 처리 중에는 Agent Trace Panel의 새 줄이 즉시 추가된다.
+- 도구 적용이 끝나면 캔버스가 짧게 flash된다.
+- 음성 인식 실패는 Command Strip에서 바로 복구 액션을 제공한다.
 
-### 모호한 참조 처리
+### 모호한 참조
 
-예: "그 노드 이름 바꿔줘"가 여러 노드에 걸릴 때
+예: "그 노드 이름 바꿔줘"
 
-- 에이전트가 짧게 되묻는다.
-- 후보를 작은 선택 목록으로 보여준다.
-- 음성으로 "결제 단계"라고 말하면 후보가 선택된다.
+UI는 후보를 작은 카드가 아니라 굵은 선택 행으로 보여준다.
 
----
-
-## 11. 접근성
-
-Primer의 접근성 방향을 따른다. MVP에서도 아래는 지킨다.
-
-- 모든 버튼은 키보드 포커스가 가능해야 한다.
-- 포커스 링은 `--mg-focus`로 명확하게 보인다.
-- 아이콘 단독 버튼에는 `aria-label`을 넣는다.
-- 마이크 상태는 시각 정보만으로 전달하지 않고 텍스트도 함께 제공한다.
-- 오류 메시지는 색상과 문구를 함께 사용한다.
-- 다이어그램 렌더 영역에는 현재 Mermaid 텍스트 또는 요약을 스크린리더용으로 제공한다.
-- 위험 작업 확인 다이얼로그는 focus trap을 적용한다.
+```text
+어떤 노드인가요?
+[1] 결제
+[2] 결제 실패
+[3] 결제 재시도
+```
 
 ---
 
-## 12. 콘텐츠 톤
+## 15. 콘텐츠 톤
 
-한국어 UI는 짧고 명령형으로 쓴다. 설명보다 상태와 결과를 말한다.
+짧고 세게 쓴다. 설명하지 말고 상태를 말한다.
 
 | 상황 | 권장 문구 | 피할 문구 |
 |---|---|---|
-| 빈 상태 | 말하거나 입력해서 다이어그램을 시작하세요. | 이 앱은 음성으로 다이어그램을 생성하는 혁신적인 도구입니다. |
+| 빈 상태 | 말하면 여기에 그려집니다. | 이 영역은 생성된 다이어그램을 표시합니다. |
 | 듣는 중 | 듣는 중 | 현재 사용자의 음성을 인식하고 있습니다. |
-| 처리 중 | 다이어그램을 바꾸는 중 | AI가 사용자의 명령을 분석하여 구조화하고 있습니다. |
-| 성공 | 노드 1개를 추가했습니다. | 성공적으로 완료되었습니다. |
-| 모호함 | 어떤 결제 단계를 말하나요? | 요청이 모호합니다. 다시 입력하세요. |
-| 삭제 확인 | 전체 다이어그램을 삭제할까요? | 정말로 이 작업을 수행하시겠습니까? |
+| 처리 중 | 구조를 짜는 중 | AI가 사용자의 명령을 분석하고 있습니다. |
+| 성공 | 노드 1개 추가 | 성공적으로 작업이 완료되었습니다. |
+| 모호함 | 어떤 노드인가요? | 요청이 모호합니다. |
+| 삭제 확인 | 전체 삭제할까요? | 정말로 이 작업을 수행하시겠습니까? |
+| 오류 | 렌더 실패 | Mermaid 렌더링 중 오류가 발생했습니다. |
 
 ---
 
-## 13. MVP 화면별 체크리스트
+## 16. 접근성
 
-### 첫 화면
+브루털리즘이어도 접근성은 낮아지면 안 된다. 강한 시각 언어를 접근성의 장점으로 사용한다.
 
-- [ ] 상단에 제품명과 Export 액션이 보인다.
-- [ ] 명령 입력이 첫 화면에서 바로 가능하다.
-- [ ] 마이크 버튼과 텍스트 입력이 같은 영역에 있다.
-- [ ] 빈 캔버스가 명확히 보인다.
-- [ ] 로그 패널이 비어 있어도 공간 구조가 유지된다.
-
-### 명령 실행 중
-
-- [ ] Listening/Thinking/Applying 상태가 구분된다.
-- [ ] 입력 중에도 기존 다이어그램이 사라지지 않는다.
-- [ ] 도구 호출 로그가 순서대로 쌓인다.
-- [ ] 실패 시 무엇을 다시 시도할 수 있는지 보인다.
-
-### 다이어그램 완성 후
-
-- [ ] 캔버스가 화면 중심을 차지한다.
-- [ ] Mermaid 원문 복사가 가능하다.
-- [ ] PNG 또는 SVG 내보내기 액션이 보인다.
-- [ ] 마지막 명령과 마지막 도구 호출 결과를 확인할 수 있다.
-
-### 위험 작업
-
-- [ ] 전체 삭제는 확인 전 실행되지 않는다.
-- [ ] 취소가 기본 선택이다.
-- [ ] 삭제 버튼은 danger 스타일이다.
+- 모든 버튼은 키보드 포커스 가능.
+- 포커스 링은 4px 이상으로 명확하게 표시.
+- 아이콘 단독 버튼은 `aria-label` 필수.
+- REC, ERROR, CONFIRM 같은 상태는 텍스트로도 제공.
+- 빨강/초록 구분에만 의존하지 않는다.
+- Confirmation Dialog는 focus trap을 적용.
+- Mermaid raw text 또는 요약을 스크린리더용으로 제공.
+- 애니메이션은 300ms 이하로 짧게 유지하고, `prefers-reduced-motion`을 존중한다.
 
 ---
 
-## 14. 구현 우선순위
+## 17. 구현 우선순위
 
-4시간 대회에서는 아래 순서로 구현한다.
+Markdown 기준의 디자인 목표이며, 구현 시에는 아래 순서로 적용한다.
 
-1. CSS 토큰과 기본 레이아웃
-2. Command Bar
-3. Diagram Canvas
-4. Tool Log Panel
-5. 상태 배지와 오류 상태
-6. Mermaid Source Drawer
-7. 내보내기 버튼 polish
-8. 반응형 보완
-9. 다크 모드
-
-다크 모드, 세밀한 애니메이션, 고급 줌 컨트롤은 핵심 데모 이후로 미룬다.
+1. CSS 토큰 교체
+2. 전체 shell의 굵은 border/grid 적용
+3. Command Strip 네오 브루털 스타일 적용
+4. Button active 물리 효과 적용
+5. Agent Trace Panel을 터미널형 로그로 변경
+6. Diagram Canvas border/shadow/flash 적용
+7. Confirmation Dialog danger 스타일 적용
+8. Mermaid themeVariables 조정
+9. 반응형 보완
 
 ---
 
-## 15. 구현 시 권장 파일 매핑
+## 18. 최종 판정 기준
 
-```text
-app/globals.css
-  - 디자인 토큰
-  - 기본 reset
-  - layout shell
+아래 질문에 모두 “예”라고 답해야 한다.
 
-components/AppShell.tsx
-  - Top Bar
-  - 전체 그리드
-
-components/CommandInput.tsx
-  - Command Bar
-  - 음성/텍스트 상태
-
-components/DiagramCanvas.tsx
-  - Mermaid 렌더
-  - 캔버스 툴바
-  - 빈 상태/오류 상태
-
-components/ToolLog.tsx
-  - Agent 로그
-  - 도구 호출 리스트
-
-components/MermaidSourceDrawer.tsx
-  - Mermaid 원문 보기/복사
-```
-
----
-
-## 16. 최종 디자인 판정 기준
-
-말그림의 UI는 아래 질문에 모두 “예”라고 답할 수 있어야 한다.
-
-- 사용자가 첫 화면에서 바로 명령을 말하거나 입력할 수 있는가?
-- 다이어그램이 화면의 주인공인가?
-- AI가 어떤 도구를 호출했는지 사용자가 확인할 수 있는가?
-- 음성 인식, 처리 중, 오류, 확인 대기 상태가 명확히 구분되는가?
-- GitHub 제품 UI처럼 차분하고 신뢰감 있는 작업 도구로 보이는가?
-- 데모 중 실패해도 텍스트 폴백과 로그로 흐름을 회복할 수 있는가?
+- 첫 화면이 랜딩 페이지가 아니라 작업대처럼 보이는가?
+- 말하기/입력하기 영역이 가장 강하게 보이는가?
+- 패널과 버튼이 굵은 선, 강한 색, 단단한 그림자로 구성되어 있는가?
+- AI 도구 호출 로그가 숨겨지지 않고 강하게 드러나는가?
+- 상태 변화가 회의 중 멀리서 봐도 구분되는가?
+- 과한 장식 없이 실제 작업 흐름을 빠르게 만드는가?
+- 네오 브루털리즘이 조잡함이 아니라 의도된 시스템으로 보이는가?

@@ -1,0 +1,201 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "check-shell-health",
+			"type": "shell",
+			"command": "pwd && date",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "create-azure-container-resources",
+			"type": "shell",
+			"command": "set -e\naz acr show -g rg-hackathon-web-260620110035 -n malgrimacr06201224 >/dev/null 2>&1 || az acr create -g rg-hackathon-web-260620110035 -n malgrimacr06201224 --sku Basic --admin-enabled true -o none\naz containerapp env show -g rg-hackathon-web-260620110035 -n malgrim-aca-env >/dev/null 2>&1 || az containerapp env create -g rg-hackathon-web-260620110035 -n malgrim-aca-env --location koreacentral -o none\naz acr show -g rg-hackathon-web-260620110035 -n malgrimacr06201224 --query loginServer -o tsv\naz containerapp env show -g rg-hackathon-web-260620110035 -n malgrim-aca-env --query properties.provisioningState -o tsv",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "register-azure-providers",
+			"type": "shell",
+			"command": "set -e\naz provider register -n Microsoft.ContainerRegistry --wait\naz provider register -n Microsoft.App --wait\naz provider register -n Microsoft.OperationalInsights --wait\naz provider show -n Microsoft.ContainerRegistry --query registrationState -o tsv\naz provider show -n Microsoft.App --query registrationState -o tsv\naz provider show -n Microsoft.OperationalInsights --query registrationState -o tsv",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "check-provider-registration",
+			"type": "shell",
+			"command": "az provider show -n Microsoft.ContainerRegistry --query registrationState -o tsv\naz provider show -n Microsoft.App --query registrationState -o tsv\naz provider show -n Microsoft.OperationalInsights --query registrationState -o tsv",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "create-app-service",
+			"type": "shell",
+			"command": "set -e\naz provider register -n Microsoft.Web --wait\naz appservice plan show -g rg-hackathon-web-260620110035 -n malgrim-asp >/dev/null 2>&1 || az appservice plan create -g rg-hackathon-web-260620110035 -n malgrim-asp --is-linux --sku B1 -o none\naz webapp show -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 >/dev/null 2>&1 || az webapp create -g rg-hackathon-web-260620110035 -p malgrim-asp -n malgrim-web-06201224 --runtime \"NODE:20-lts\" -o none\naz webapp show -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --query defaultHostName -o tsv",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "list-node-runtimes",
+			"type": "shell",
+			"command": "az webapp list-runtimes --os-type linux | grep NODE | tail -10",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "create-node22-webapp",
+			"type": "shell",
+			"command": "set -e\naz appservice plan show -g rg-hackathon-web-260620110035 -n malgrim-asp >/dev/null 2>&1 || az appservice plan create -g rg-hackathon-web-260620110035 -n malgrim-asp --is-linux --sku B1 -o none\naz webapp show -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 >/dev/null 2>&1 || az webapp create -g rg-hackathon-web-260620110035 -p malgrim-asp -n malgrim-web-06201224 --runtime \"NODE|22-lts\" -o none\naz webapp show -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --query defaultHostName -o tsv",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "check-webapp-rest",
+			"type": "shell",
+			"command": "set -e\nSUB=$(az account show --query id -o tsv)\naz rest --method get --url \"https://management.azure.com/subscriptions/$SUB/resourceGroups/rg-hackathon-web-260620110035/providers/Microsoft.Web/sites/malgrim-web-06201224?api-version=2023-12-01\" --query \"{name:name,host:properties.defaultHostName,state:properties.state}\" -o table",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "set-webapp-env",
+			"type": "shell",
+			"command": "set -e\nset -a\nsource .env.local\nset +a\n: ${AZURE_OPENAI_API_VERSION:=2024-10-21}\naz webapp config appsettings set -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 -o none --settings \\\n  AZURE_OPENAI_ENDPOINT=\"$AZURE_OPENAI_ENDPOINT\" \\\n  AZURE_OPENAI_API_KEY=\"$AZURE_OPENAI_API_KEY\" \\\n  AZURE_OPENAI_DEPLOYMENT=\"$AZURE_OPENAI_DEPLOYMENT\" \\\n  AZURE_OPENAI_API_VERSION=\"$AZURE_OPENAI_API_VERSION\" \\\n  AZURE_SPEECH_KEY=\"$AZURE_SPEECH_KEY\" \\\n  AZURE_SPEECH_REGION=\"$AZURE_SPEECH_REGION\" \\\n  NEXT_PUBLIC_APP_URL=\"https://malgrim-web-06201224.azurewebsites.net\" \\\n  COPILOTKIT_TELEMETRY_DISABLED=\"true\" \\\n  SCM_DO_BUILD_DURING_DEPLOYMENT=\"true\" \\\n  ENABLE_ORYX_BUILD=\"true\"\naz webapp config set -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --startup-file \"npm run start\" -o none\necho \"app settings updated\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "zip-deploy-webapp",
+			"type": "shell",
+			"command": "set -e\nrm -f /tmp/malgrim-deploy.zip\ngit ls-files -z | xargs -0 zip -q /tmp/malgrim-deploy.zip\naz webapp deploy -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --type zip --src-path /tmp/malgrim-deploy.zip --async false --timeout 1200 -o none\necho \"deployed https://malgrim-web-06201224.azurewebsites.net\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "check-deployed-site",
+			"type": "shell",
+			"command": "set +e\ncurl -I -L --max-time 30 https://malgrim-web-06201224.azurewebsites.net/\necho \"--- api ---\"\ncurl -sS --max-time 30 https://malgrim-web-06201224.azurewebsites.net/api/agent | head -c 600\necho",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "inspect-webapp-deploy-logs",
+			"type": "shell",
+			"command": "set +e\naz webapp log config -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --application-logging filesystem --web-server-logging filesystem --level information -o none\naz webapp log deployment list -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --query \"[0].{status:status,message:message,log_time:log_time,id:id}\" -o table\naz webapp log tail -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --provider appservice --timeout 60",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "deployment-log-details",
+			"type": "shell",
+			"command": "set +e\naz webapp log deployment list -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 -o json | head -c 2000\necho",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "check-standalone-secrets",
+			"type": "shell",
+			"command": "set -e\nfind .next/standalone -name '.env*' -o -name '*.local' | sed -n '1,20p'\nfind .next/standalone -maxdepth 2 -type f | wc -l",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "deploy-standalone-webapp",
+			"type": "shell",
+			"command": "set -e\naz webapp config appsettings set -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 -o none --settings SCM_DO_BUILD_DURING_DEPLOYMENT=\"false\" ENABLE_ORYX_BUILD=\"false\"\naz webapp config set -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --startup-file \"node server.js\" -o none\nrm -rf /tmp/malgrim-package /tmp/malgrim-standalone.zip\nmkdir -p /tmp/malgrim-package/.next\ncp -R .next/standalone/. /tmp/malgrim-package/\ncp -R .next/static /tmp/malgrim-package/.next/static\ncd /tmp/malgrim-package\nzip -qr /tmp/malgrim-standalone.zip .\naz webapp deploy -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --type zip --src-path /tmp/malgrim-standalone.zip --async false --timeout 1200 -o none\necho \"deployed standalone\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "check-deploy-after-502",
+			"type": "shell",
+			"command": "set +e\naz webapp log deployment list -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 -o json | head -c 3000\necho\ncurl -I -L --max-time 20 https://malgrim-web-06201224.azurewebsites.net/",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "check-container-providers-again",
+			"type": "shell",
+			"command": "az provider show -n Microsoft.ContainerRegistry --query registrationState -o tsv\naz provider show -n Microsoft.App --query registrationState -o tsv\naz provider show -n Microsoft.OperationalInsights --query registrationState -o tsv",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "create-container-resources",
+			"type": "shell",
+			"command": "set -e\naz acr show -g rg-hackathon-web-260620110035 -n malgrimacr06201224 >/dev/null 2>&1 || az acr create -g rg-hackathon-web-260620110035 -n malgrimacr06201224 --sku Basic --admin-enabled true -o none\naz containerapp env show -g rg-hackathon-web-260620110035 -n malgrim-aca-env >/dev/null 2>&1 || az containerapp env create -g rg-hackathon-web-260620110035 -n malgrim-aca-env --location koreacentral -o none\naz acr show -g rg-hackathon-web-260620110035 -n malgrimacr06201224 --query loginServer -o tsv\naz containerapp env show -g rg-hackathon-web-260620110035 -n malgrim-aca-env --query properties.provisioningState -o tsv",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "acr-build-image",
+			"type": "shell",
+			"command": "set -e\nIMAGE_TAG=malgrim:20260620-aca1\naz acr build -g rg-hackathon-web-260620110035 -r malgrimacr06201224 -t $IMAGE_TAG .\necho $IMAGE_TAG",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "check-docker",
+			"type": "shell",
+			"command": "set +e\ndocker --version\ndocker info --format '{{.ServerVersion}}'",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "restart-webapp-and-redeploy",
+			"type": "shell",
+			"command": "set -e\naz webapp restart -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 -o none\naz webapp deploy -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --type zip --src-path /tmp/malgrim-standalone.zip --restart true --async false --timeout 1200 -o none\necho \"standalone deploy complete\"",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "latest-deployment-detail",
+			"type": "shell",
+			"command": "set +e\naz webapp log deployment list -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 -o json | head -c 5000\necho\naz webapp show -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --query \"{state:state,host:defaultHostName}\" -o table",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "verify-webapp-status",
+			"type": "shell",
+			"command": "set +e\naz webapp log deployment list -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --query \"[0].{status:status,complete:complete,progress:progress,status_text:status_text}\" -o table\ncurl -I -L --max-time 60 https://malgrim-web-06201224.azurewebsites.net/\necho \"--- api ---\"\ncurl -sS --max-time 60 https://malgrim-web-06201224.azurewebsites.net/api/agent | head -c 1000\necho",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "show-latest-deployment-log",
+			"type": "shell",
+			"command": "set +e\nDEPLOY_ID=$(az webapp log deployment list -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --query '[0].id' -o tsv)\necho \"$DEPLOY_ID\"\naz webapp log deployment show -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --deployment-id \"$DEPLOY_ID\" -o json | head -c 5000\necho",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "verify-webapp-status-2",
+			"type": "shell",
+			"command": "set +e\naz webapp log deployment list -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --query \"[0].{status:status,complete:complete,progress:progress,status_text:status_text,end:end_time}\" -o table\ncurl -I -L --max-time 60 https://malgrim-web-06201224.azurewebsites.net/\necho \"--- api ---\"\ncurl -sS --max-time 60 https://malgrim-web-06201224.azurewebsites.net/api/agent | head -c 1000\necho",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "tail-webapp-logs",
+			"type": "shell",
+			"command": "az webapp log tail -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --provider appservice | head -120",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "check-rsync-deployment-final",
+			"type": "shell",
+			"command": "set +e\naz webapp log deployment list -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --query \"[0].{status:status,complete:complete,progress:progress,status_text:status_text,end:end_time}\" -o table\nDEPLOY_ID=$(az webapp log deployment list -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --query '[0].id' -o tsv)\naz webapp log deployment show -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --deployment-id \"$DEPLOY_ID\" --query \"[-5:].message\" -o tsv",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "deploy-run-from-package",
+			"type": "shell",
+			"command": "set -e\naz webapp config appsettings set -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 -o none --settings WEBSITE_RUN_FROM_PACKAGE=\"1\" SCM_DO_BUILD_DURING_DEPLOYMENT=\"false\" ENABLE_ORYX_BUILD=\"false\"\naz webapp deployment source config-zip -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --src /tmp/malgrim-standalone.zip --timeout 1200 -o none\naz webapp restart -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 -o none\necho \"run-from-package deployed\"",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

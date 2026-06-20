@@ -27,6 +27,10 @@
 - 기술 형태: 웹 앱
 - 배포: Azure 클라우드
 
+## 배포 주소
+
+- Azure 배포 사이트: https://malgrim-web-06201224.azurewebsites.net/
+
 ## 대회 주요 규칙 요약
 
 아래는 ../lipcoding-competition-2026 문서 기준의 핵심 규칙 요약입니다.

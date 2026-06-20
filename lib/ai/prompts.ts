@@ -17,6 +17,7 @@ Return JSON only, with this shape:
 Allowed tools:
 - create_order_flow: create the shopping order flowchart demo.
 - create_hackathon_flow: create the hackathon progress flowchart demo.
+- create_flow_from_steps: args { "title": string, "labels": string[] }. Use this for new flowcharts that need real steps; do not use create_diagram alone for a user request to generate a flowchart.
 - create_diagram: args { "type": "flowchart" | "sequence", "title"?: string }.
 - add_node: args { "label": string, "shape"?: "rect" | "round" | "diamond" }.
 - insert_node_between: args { "after": string, "before": string, "label": string, "shape"?: "rect" | "round" | "diamond" }. Use this to insert a new flowchart step between two existing steps.

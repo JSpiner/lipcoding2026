@@ -5,6 +5,7 @@ export type AgentToolAction = {
   tool:
     | "create_order_flow"
     | "create_hackathon_flow"
+    | "create_flow_from_steps"
     | "create_diagram"
     | "add_node"
     | "insert_node_between"
@@ -143,6 +144,16 @@ function normalizeAction(value: unknown): AgentToolAction | null {
         tool: "create_diagram",
         type: isDiagramType(action.type) ? action.type : "flowchart",
         title: asOptionalString(action.title),
+      };
+    case "create_flow_from_steps":
+      if (!asOptionalString(action.title) || !asStringArray(action.labels)) {
+        return null;
+      }
+
+      return {
+        tool: "create_flow_from_steps",
+        title: asOptionalString(action.title),
+        labels: asStringArray(action.labels),
       };
     case "add_node":
       if (!asOptionalString(action.label)) {

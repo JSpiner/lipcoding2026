@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { correctSpeechText, type CorrectionResult } from "@/lib/speech/correction";
 import { readSpeechText } from "@/lib/speech/text";
 
 type SpeechRecognitionConstructor = new () => SpeechRecognition;
@@ -41,6 +42,10 @@ type SpeechTokenResponse = {
   message?: string;
 };
 
+type CorrectionApiResponse = CorrectionResult & {
+  message?: string;
+};
+
 type AzureRecognizer = {
   close: () => void;
   stopContinuousRecognitionAsync: (successCallback?: () => void, errorCallback?: (error: string) => void) => void;
@@ -56,6 +61,7 @@ declare global {
 export function VoiceInput({ disabled, onInterimTranscript }: VoiceInputProps) {
   const [status, setStatus] = useState("VOICE READY");
   const [transcript, setTranscript] = useState("");
+  const [correction, setCorrection] = useState<CorrectionResult | null>(null);
   const [isListening, setIsListening] = useState(false);
   const azureRecognizerRef = useRef<AzureRecognizer | null>(null);
   const browserRecognitionRef = useRef<SpeechRecognition | null>(null);
@@ -79,6 +85,7 @@ export function VoiceInput({ disabled, onInterimTranscript }: VoiceInputProps) {
     }
 
     setTranscript("");
+    setCorrection(null);
     transcriptRef.current = "";
     setIsListening(true);
     setStatus("AZURE TOKEN");
@@ -226,9 +233,36 @@ export function VoiceInput({ disabled, onInterimTranscript }: VoiceInputProps) {
   }
 
   async function finishRecognition(text: string, nextStatus: string) {
-    updateTranscript(text);
-    setStatus(nextStatus);
+    const nextCorrection = await requestCorrection(text);
+    const nextTranscript = nextCorrection.applied ? nextCorrection.corrected : nextCorrection.original;
+
+    setCorrection(nextCorrection.original !== nextCorrection.corrected ? nextCorrection : null);
+    updateTranscript(nextTranscript);
+    setStatus(nextCorrection.original !== nextCorrection.corrected ? "교정 완료" : nextStatus);
     setIsListening(false);
+  }
+
+  async function requestCorrection(text: string): Promise<CorrectionResult> {
+    try {
+      const response = await fetch("/api/correction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) {
+        return correctSpeechText(text);
+      }
+
+      const payload = (await response.json()) as CorrectionApiResponse;
+      if (typeof payload.corrected !== "string" || typeof payload.original !== "string") {
+        return correctSpeechText(text);
+      }
+
+      return payload;
+    } catch {
+      return correctSpeechText(text);
+    }
   }
 
   function updateTranscript(text: string) {
@@ -241,6 +275,25 @@ export function VoiceInput({ disabled, onInterimTranscript }: VoiceInputProps) {
     setStatus("STOPPING");
     cleanupRecognition();
     setIsListening(false);
+  }
+
+  function applyCorrection() {
+    if (!correction) {
+      return;
+    }
+
+    updateTranscript(correction.corrected);
+    setCorrection({ ...correction, applied: true, reason: "사용자가 교정을 적용했습니다." });
+  }
+
+  function keepOriginal() {
+    if (!correction) {
+      return;
+    }
+
+    updateTranscript(correction.original);
+    setCorrection(null);
+    setStatus("원문 유지");
   }
 
   function cleanupRecognition() {
@@ -268,8 +321,27 @@ export function VoiceInput({ disabled, onInterimTranscript }: VoiceInputProps) {
         {isListening ? "STOP" : "REC"}
       </button>
       <div className="voice-readout" aria-live="polite">
-        <span>{status}</span>
-        <p>{transcript || "마이크로 말하면 명령이 바로 실행됩니다."}</p>
+        <div className="voice-readout-meta">
+          <span>{status}</span>
+          {correction && correction.original !== correction.corrected ? <span>{correction.applied ? "AUTO CORRECT" : "CHECK CORRECTION"}</span> : null}
+        </div>
+        <p>{transcript || "마이크로 말하면 명령이 입력창에 반영됩니다."}</p>
+        {correction && correction.original !== correction.corrected ? (
+          <div className="voice-correction" aria-label="음성 교정 제안">
+            <span>{correction.applied ? "AUTO CORRECT" : "CHECK CORRECTION"}</span>
+            <span>원문: {correction.original}</span>
+            <span>교정: {correction.corrected}</span>
+            <span>{correction.reason}</span>
+            <div className="button-row voice-correction-actions">
+              <button className="secondary-button" onClick={keepOriginal} type="button">
+                원문 유지
+              </button>
+              <button className="secondary-button" disabled={correction.applied} onClick={applyCorrection} type="button">
+                교정 적용
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { resolveRef } from "../lib/diagram/resolver";
-import { addFeedbackCycle, addNode, connect, createHackathonFlow, createOrderFlow, insertNodeBetween, relabel, setDirection, switchType } from "../lib/diagram/tools";
+import { addFeedbackCycle, addNode, connect, createFlowFromSteps, createHackathonFlow, createOrderFlow, insertNodeBetween, relabel, setDirection, switchType } from "../lib/diagram/tools";
 import type { DiagramIR } from "../lib/diagram/types";
 
 test("resolveRef ignores empty references", () => {
@@ -20,6 +20,14 @@ test("creates the deterministic hackathon flow", () => {
     ["아이디어 선정", "요구사항 정리", "프로토타입 구현", "테스트와 보완", "배포", "데모 발표"],
   );
   assert.deepEqual(result.ir?.type === "flowchart" ? result.ir.edges.map((edge) => `${edge.from}->${edge.to}`) : [], ["n1->n2", "n2->n3", "n3->n4", "n4->n5", "n5->n6"]);
+});
+
+test("creates a flowchart from a step list", () => {
+  const result = createFlowFromSteps("주차장 입찰 로직", ["입찰 공고 확인", "입찰 조건 검토", "입찰가 산정"]);
+
+  assert.equal(result.ir?.type, "flowchart");
+  assert.deepEqual(result.ir?.type === "flowchart" ? result.ir.nodes.map((node) => node.label) : [], ["입찰 공고 확인", "입찰 조건 검토", "입찰가 산정"]);
+  assert.deepEqual(result.ir?.type === "flowchart" ? result.ir.edges.map((edge) => `${edge.from}->${edge.to}`) : [], ["n1->n2", "n2->n3"]);
 });
 
 test("flowchart tools edit nodes and edges by natural references", () => {

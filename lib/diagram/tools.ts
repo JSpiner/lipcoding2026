@@ -6,6 +6,13 @@ let edgeSequence = 0;
 let participantSequence = 0;
 let messageSequence = 0;
 
+export function resetDiagramToolSequences() {
+  nodeSequence = 0;
+  edgeSequence = 0;
+  participantSequence = 0;
+  messageSequence = 0;
+}
+
 export function createDiagram(type: DiagramType, title?: string): ToolResult {
   if (type === "sequence") {
     return {
@@ -71,6 +78,30 @@ export function createHackathonFlow(): ToolResult {
       ],
     },
     logs: [{ tool: "create_diagram", summary: "해커톤 진행 프로세스 플로우차트를 생성했습니다." }],
+  };
+}
+
+export function createFlowFromSteps(title: string, labels: string[]): ToolResult {
+  const normalizedLabels = labels.map((label) => label.trim()).filter(Boolean);
+
+  if (normalizedLabels.length === 0) {
+    return createDiagram("flowchart", title);
+  }
+
+  const nodes = normalizedLabels.map((label, index) => ({ id: `n${index + 1}`, label, shape: index === 0 || index === normalizedLabels.length - 1 ? ("round" as const) : undefined }));
+  const edges = nodes.slice(0, -1).map((node, index) => ({ id: `e${index + 1}`, from: node.id, to: nodes[index + 1].id }));
+  nodeSequence = Math.max(nodeSequence, nodes.length);
+  edgeSequence = Math.max(edgeSequence, edges.length);
+
+  return {
+    ir: {
+      type: "flowchart",
+      direction: "TD",
+      title,
+      nodes,
+      edges,
+    },
+    logs: [{ tool: "create_flow_from_steps", summary: `${title} 플로우차트를 생성했습니다.` }],
   };
 }
 

@@ -117,4 +117,85 @@
 
 ---
 
+## 2026-06-20 15:07 — Round 4 (Voice + E2E Expansion)
+
+**프로젝트 상태:** 단위 테스트 15개 + E2E 14개 통과. 로컬 `/api/agent` 실호출로 Azure OpenAI 기반 플로우 생성 확인. 음성 인식/보정/보안 관련 테스트가 추가되어 품질 근거가 강화됨. 단, Azure Web App/Container App 공개 URL은 아직 확인되지 않음.
+
+| Judge | 항목 | 가중치 | 점수 | 가중 점수 |
+|-------|------|-------:|-----:|----------:|
+| J1 | Effective Use of Copilot SDK | 25% | 86 | 2150 |
+| J2 | Productivity Impact & Problem Fit | 18% | 86 | 1548 |
+| J3 | Azure AI & Cloud Integration | 18% | 74 | 1332 |
+| J4 | Functionality & Technical Execution | 16% | 93 | 1488 |
+| J5 | User Experience & Workflow Design | 12% | 89 | 1068 |
+| J6 | Responsible AI, Security & Trust | 6% | 90 | 540 |
+| J7 | Innovation & Originality | 5% | 87 | 435 |
+| | **Final Score** | **100%** | | **85.61** |
+
+### 근거 요약
+- 강점: 대규모 E2E 테스트로 핵심 사용자 플로우, 음성 토큰 엔드포인트, 음성 보정 안전장치, 다이어그램 export 품질까지 검증됨.
+- 강점: Azure OpenAI 경로로 실제 명령 처리가 확인되어 AI/도구 연동의 실효성이 높아짐.
+- 리스크: `az webapp show` 결과가 `webapp_not_found`로 확인되어, 클라우드 공개 URL 기반의 최종 운영 검증은 미완료.
+
+### 다음 라운드 우선 과제
+1. Azure 공개 URL(웹앱 또는 컨테이너앱) 생성 후 헬스 체크/스모크 테스트 로그를 기록
+2. 배포 파이프라인 실패 원인(run-from-package) 고정 및 재배포 자동화
+3. 배포 URL 기준 E2E 1회 실행으로 심사 증빙 완성
+
+---
+
+## 2026-06-20 15:15 — Round 5 (Server Correction Switch)
+
+**프로젝트 상태:** 음성 교정을 `/api/correction` 서버 계산 경로로 전환. 단위 테스트 18개 통과. E2E 15개 중 3개 실패(상태 누수/기대 불일치). `/api/correction` 응답은 현재 `source: rule`로 확인됨. Azure 공개 URL은 여전히 미확인.
+
+| Judge | 항목 | 가중치 | 점수 | 가중 점수 |
+|-------|------|-------:|-----:|----------:|
+| J1 | Effective Use of Copilot SDK | 25% | 84 | 2100 |
+| J2 | Productivity Impact & Problem Fit | 18% | 86 | 1548 |
+| J3 | Azure AI & Cloud Integration | 18% | 73 | 1314 |
+| J4 | Functionality & Technical Execution | 16% | 85 | 1360 |
+| J5 | User Experience & Workflow Design | 12% | 85 | 1020 |
+| J6 | Responsible AI, Security & Trust | 6% | 89 | 534 |
+| J7 | Innovation & Originality | 5% | 87 | 435 |
+| | **Final Score** | **100%** | | **83.11** |
+
+### 근거 요약
+- 강점: 교정 계산이 클라이언트 하드코딩 의존에서 서버 API 중심으로 이동해 아키텍처 일관성이 향상됨.
+- 강점: 단위 테스트 18개 통과로 로직 안정성은 유지됨.
+- 리스크: E2E 3개 실패로 실제 사용자 플로우 검증 신뢰도가 하락했고, `/api/correction`이 현재 Azure 결과 대신 규칙 기반 경로를 반환함.
+
+### 다음 라운드 우선 과제
+1. E2E 실패 3건 수정(테스트 격리/초기 상태 보장) 후 재실행
+2. `/api/correction`에서 `source: azure-openai`가 반환되도록 환경/호출 경로 점검
+3. Azure 공개 URL 헬스 체크 증빙 확보
+
+---
+
+## 2026-06-20 15:27 — Round 6 (Stabilized E2E + Live URL Verified)
+
+**프로젝트 상태:** 단위 테스트 21개 + E2E 15개 전부 통과. 배포 URL `https://malgrim-web-06201224.azurewebsites.net/` HTTP 200 확인. 배포된 `/api/agent`는 `source: azure-openai` 확인. 배포된 `/api/correction`은 현재 `source: rule`로 응답.
+
+| Judge | 항목 | 가중치 | 점수 | 가중 점수 |
+|-------|------|-------:|-----:|----------:|
+| J1 | Effective Use of Copilot SDK | 25% | 88 | 2200 |
+| J2 | Productivity Impact & Problem Fit | 18% | 86 | 1548 |
+| J3 | Azure AI & Cloud Integration | 18% | 86 | 1548 |
+| J4 | Functionality & Technical Execution | 16% | 94 | 1504 |
+| J5 | User Experience & Workflow Design | 12% | 90 | 1080 |
+| J6 | Responsible AI, Security & Trust | 6% | 91 | 546 |
+| J7 | Innovation & Originality | 5% | 87 | 435 |
+| | **Final Score** | **100%** | | **88.61** |
+
+### 근거 요약
+- 강점: 테스트 회귀가 모두 해소되어 단위/통합/E2E 신뢰도가 높고, 실제 배포 URL 헬스 체크가 확인됨.
+- 강점: 배포 환경 `/api/agent`에서 Azure OpenAI 경로가 확인되어 AI 핵심 경로 실증이 강화됨.
+- 리스크: `/api/correction`이 배포 환경에서 여전히 규칙 기반으로 응답해 음성 교정 Azure 경로 실증은 부분적임.
+
+### 다음 라운드 우선 과제
+1. 배포 환경 `/api/correction`에서 `source: azure-openai` 확인(환경변수/재배포 점검)
+2. 배포 URL 기준 음성 교정 시나리오 E2E 1회 추가
+3. 심사용 증빙(테스트 로그 + 배포 응답 스냅샷) 패키징
+
+---
+
 <!-- 다음 채점 결과를 아래에 추가하세요 -->

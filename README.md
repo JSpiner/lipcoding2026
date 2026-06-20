@@ -43,6 +43,8 @@
 ## 참고 문서
 
 - 기획 문서: docs/PRD.md
+- 디자인 코어 시스템: docs/DESIGN_CORE_SYSTEM.md
+- 구현 계획: docs/IMPLEMENTATION_PLAN.md
 - 대회 개요: ../lipcoding-competition-2026/README.md
 - 입코딩 규칙: ../lipcoding-competition-2026/policies/policy-rules.md
 - 페널티 규정: ../lipcoding-competition-2026/policies/policy-penalties.md

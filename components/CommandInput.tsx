@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent } from "react";
 
 type CommandInputProps = {
+  command: string;
   disabled: boolean;
+  onCommandChange: (command: string) => void;
   onSubmit: (command: string) => Promise<void>;
 };
 
@@ -15,9 +17,9 @@ const suggestions = [
   "전체 지워줘",
 ];
 
-export function CommandInput({ disabled, onSubmit }: CommandInputProps) {
-  const [command, setCommand] = useState(suggestions[0]);
+export const defaultCommand = suggestions[0];
 
+export function CommandInput({ command, disabled, onCommandChange, onSubmit }: CommandInputProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await onSubmit(command);
@@ -38,7 +40,7 @@ export function CommandInput({ disabled, onSubmit }: CommandInputProps) {
             className="command-input"
             disabled={disabled}
             id="command"
-            onChange={(event) => setCommand(event.target.value)}
+            onChange={(event) => onCommandChange(event.target.value)}
             value={command}
           />
           <button className="primary-button" disabled={disabled || !command.trim()} type="submit">
@@ -49,7 +51,7 @@ export function CommandInput({ disabled, onSubmit }: CommandInputProps) {
 
       <div className="suggestions" aria-label="예시 명령">
         {suggestions.map((suggestion) => (
-          <button className="suggestion-button" disabled={disabled} key={suggestion} onClick={() => setCommand(suggestion)} type="button">
+          <button className="suggestion-button" disabled={disabled} key={suggestion} onClick={() => onCommandChange(suggestion)} type="button">
             {suggestion}
           </button>
         ))}

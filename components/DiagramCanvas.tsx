@@ -26,6 +26,10 @@ export function DiagramCanvas({ mermaid }: DiagramCanvasProps) {
           securityLevel: "strict",
           startOnLoad: false,
           theme: "base",
+          flowchart: {
+            htmlLabels: false,
+            useMaxWidth: true,
+          },
           themeVariables: {
             primaryColor: "#ffe14d",
             primaryTextColor: "#111111",

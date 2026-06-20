@@ -109,7 +109,7 @@ button:disabled {
 }
 
 .state-badge,
-.top-action,
+.voice-button,
 .panel-counter,
 .rec-badge {
   align-items: center;
@@ -133,13 +133,13 @@ button:disabled {
   color: var(--mg-white);
 }
 
-.top-action {
+.voice-button {
   background: var(--mg-yellow);
   box-shadow: var(--mg-shadow-hard-sm);
   color: var(--mg-ink);
 }
 
-.top-action:active,
+.voice-button:active,
 .primary-button:active,
 .secondary-button:active,
 .danger-button:active,
@@ -162,6 +162,48 @@ button:disabled {
 .command-form {
   display: grid;
   gap: 10px;
+}
+
+.voice-panel {
+  align-items: stretch;
+  background: var(--mg-white);
+  border: var(--mg-border-width) solid var(--mg-border);
+  display: grid;
+  gap: 0;
+  grid-template-columns: 96px minmax(0, 1fr);
+  margin-bottom: 10px;
+}
+
+.voice-panel-listening {
+  background: var(--mg-yellow);
+}
+
+.voice-button {
+  border: 0;
+  border-right: var(--mg-border-width) solid var(--mg-border);
+  box-shadow: none;
+  font-family: var(--mg-font-display);
+  font-size: 18px;
+  min-height: 56px;
+}
+
+.voice-readout {
+  display: grid;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.voice-readout span {
+  font-family: var(--mg-font-mono);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.voice-readout p {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin: 0;
 }
 
 .command-label-row,
@@ -243,6 +285,18 @@ button:disabled {
 
 .secondary-button { background: var(--mg-white); }
 .danger-button { background: var(--mg-red); color: var(--mg-white); }
+
+.export-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.export-buttons .secondary-button {
+  min-height: 34px;
+  padding: 5px 9px;
+}
 
 .suggestions {
   display: flex;
@@ -480,7 +534,10 @@ pre {
   .brand-subtitle { display: none; }
   .session-strip { align-items: stretch; flex-direction: column; padding: 10px; }
   .state-badge,
-  .top-action { width: 100%; }
+  .export-buttons,
+  .export-buttons .secondary-button { width: 100%; }
+  .voice-panel { grid-template-columns: 1fr; }
+  .voice-button { border-bottom: var(--mg-border-width) solid var(--mg-border); border-right: 0; }
   .command-input { font-size: 16px; }
   .empty-state { font-size: 20px; }
   .suggestion-button { max-width: 220px; }

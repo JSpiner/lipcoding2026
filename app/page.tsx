@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CommandInput } from "@/components/CommandInput";
+import { CommandInput, defaultCommand } from "@/components/CommandInput";
 import { DiagramCanvas } from "@/components/DiagramCanvas";
+import { ExportButtons } from "@/components/ExportButtons";
 import { ToolLog } from "@/components/ToolLog";
+import { VoiceInput } from "@/components/VoiceInput";
 import type { DiagramResponse } from "@/lib/diagram/types";
 
 const initialState: DiagramResponse = {
@@ -15,6 +17,7 @@ const initialState: DiagramResponse = {
 
 export default function Home() {
   const [state, setState] = useState<DiagramResponse>(initialState);
+  const [command, setCommand] = useState(defaultCommand);
   const [isBusy, setIsBusy] = useState(false);
 
   useEffect(() => {
@@ -76,14 +79,13 @@ export default function Home() {
         </div>
         <div className="session-strip" aria-label="세션 상태">
           <span className={isBusy ? "state-badge state-badge-busy" : "state-badge"}>{isBusy ? "해석 중" : "LIVE SESSION"}</span>
-          <button className="top-action" disabled={!state.mermaid} onClick={copyMermaid} type="button">
-            EXPORT MERMAID
-          </button>
+          <ExportButtons mermaid={state.mermaid} onCopy={copyMermaid} />
         </div>
       </header>
 
       <section className={isBusy ? "command-strip command-strip-busy" : "command-strip"}>
-        <CommandInput disabled={isBusy} onSubmit={submitCommand} />
+        <VoiceInput disabled={isBusy} onInterimTranscript={setCommand} />
+        <CommandInput command={command} disabled={isBusy} onCommandChange={setCommand} onSubmit={submitCommand} />
       </section>
 
       <div className="workspace">
@@ -126,9 +128,7 @@ export default function Home() {
       <section className="mermaid-source" aria-label="Mermaid 원문">
         <div className="source-header">
           <h2>MERMAID SOURCE / RAW OUTPUT</h2>
-          <button className="secondary-button" disabled={!state.mermaid} onClick={copyMermaid} type="button">
-            COPY
-          </button>
+          <ExportButtons mermaid={state.mermaid} onCopy={copyMermaid} />
         </div>
         <pre>{state.mermaid || "아직 생성된 Mermaid 소스가 없습니다."}</pre>
       </section>

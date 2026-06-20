@@ -180,12 +180,13 @@ type ToolResult = {
 
 ### 구현 범위
 
-- Copilot SDK 설치 및 기본 에이전트 구성
-- 도구 함수 등록
+- Copilot SDK `BuiltInAgent` 구성
+- `defineTool` 기반 도구 함수 등록
 - 현재 IR과 최근 도구 로그를 에이전트 컨텍스트로 주입
 - Azure OpenAI 환경변수 구성
 - 에이전트 응답 스트리밍 또는 단계별 로그 표시
 - 모델 출력 검증 및 실패 시 폴백 처리
+- Copilot 런타임 중심 루프 모듈(`lib/ai/copilot-runtime.ts`)에서 `BuiltInAgent` 계획/`defineTool` 등록/가드/fallback/도구 실행을 일원화
 
 ### 추가할 주요 파일
 
@@ -246,29 +247,28 @@ export
 
 ### Azure OpenAI 연결 전략
 
-#### 1순위
-
-Copilot SDK의 모델 계층이 Azure OpenAI 엔드포인트를 직접 사용할 수 있으면 그대로 연결한다.
-
-#### 차선책
-
-Copilot SDK와 Azure OpenAI 직접 연결이 막히면 다음 구조로 전환한다.
+#### 구현 경로
 
 ```text
-Copilot SDK: 제품 내 도구 오케스트레이션과 에이전트 인터페이스 담당
-Azure OpenAI: 자연어 명령을 구조화된 action JSON으로 변환
-도구 실행: 서버가 action JSON을 검증한 뒤 IR 수정
+Copilot SDK BuiltInAgent: 자연어 명령을 도구 호출 루프로 해석
+Azure OpenAI: Copilot SDK agent의 모델 백엔드
+defineTool registry: 다이어그램 IR 변경 도구 노출
+runtime guards: SDK 계획 검증 및 안전 fallback
+executeCopilotToolAction: 승인된 도구 호출 적용
 ```
 
-이 경우에도 Azure OpenAI가 의미 있는 AI 추론에 실제로 사용되어야 한다.
+SDK agent 실행 실패, 429, 네트워크 장애 시에만 Azure 직접 planner 또는 local fallback을 사용한다.
 
 ### 검증 포인트
 
 - 에이전트가 Mermaid 문자열을 직접 만들지 않는지 확인
+- `/api/agent` 응답의 `agent.source`가 기본 경로에서 `copilot-sdk`인지 확인
+- 응답 메타데이터에 `BuiltInAgent`, `defineTool`, 등록 도구 목록이 포함되는지 확인
 - 도구 호출 로그가 화면에 보이는지 확인
 - 없는 노드 id를 참조하는 도구 호출이 거부되는지 확인
 - `clear`는 확인 전 실행되지 않는지 확인
 - Azure OpenAI 키가 브라우저로 노출되지 않는지 확인
+- `/api/agent`가 `status/plan/action/done` 스트리밍 이벤트를 전달하는지 확인
 
 ### 완료 기준
 
@@ -277,6 +277,7 @@ Azure OpenAI: 자연어 명령을 구조화된 action JSON으로 변환
 - 현재 IR이 에이전트 컨텍스트에 반영됨
 - Azure OpenAI 호출이 서버에서 실제로 발생함
 - 도구 호출 결과가 UI 로그에 표시됨
+- `agent.ts`는 얇은 진입점으로 유지되고 핵심 루프는 Copilot 런타임 모듈이 담당함
 
 ### 이 단계의 리스크
 

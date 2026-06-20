@@ -12,7 +12,7 @@
 
 - **제품명:** 말그림 (MalGrim) — *SpeakDraw*
 - **태그라인:** "말하면 그려집니다"
-- **핵심 동작:** 음성 명령 → Copilot SDK 에이전트가 다이어그램 IR(구조화 JSON)을 도구 호출로 편집 → Mermaid로 렌더 → 음성으로 계속 수정/타입 전환/내보내기
+- **핵심 동작:** 음성 명령 → **Copilot Runtime Agent Loop**가 계획(plan)·보정(guard)·도구 실행(action)·완료(done)를 오케스트레이션 → Mermaid 렌더 → 음성으로 계속 수정/타입 전환/내보내기
 
 ---
 
@@ -35,13 +35,13 @@
 
 | # | 심사 항목 | 가중치 | 말그림의 대응 전략 |
 |---|---|---:|---|
-| 1 | **Effective Use of Copilot SDK** | 25% | 편집 = 도구 호출. `add_node / connect / relabel / remove / switch_type / export` 등 **의미 있는 다중 도구 오케스트레이션**이 제품의 심장. 스트리밍으로 추론·도구 호출·렌더를 실시간 노출. |
-| 2 | **Productivity Impact & Problem Fit** | 18% | 개발자+기획자라는 명확한 사용자의 실제 페인(다이어그램 작성 비용)을 정조준. |
-| 3 | **Azure AI & Cloud Integration** | 18% | 모델 계층을 **Azure OpenAI**로 구성, 음성 입력은 **Azure Speech-to-Text**, **Azure Container Apps** 배포, 시크릿은 **Key Vault**. |
-| 4 | **Functionality & Technical Execution** | 16% | IR→직렬화기→Mermaid의 결정적 파이프라인으로 end-to-end 안정 동작. 반응형 웹. |
-| 5 | **User Experience & Workflow Design** | 12% | 음성 우선 + 텍스트 폴백, 스트리밍으로 지연 우아하게 처리, "그 노드" 같은 자연 참조 해석. |
-| 6 | **Responsible AI, Security & Trust** | 6% | 파괴적 작업(전체 삭제) 전 사람 확인, 모델 출력(IR) 검증 후 렌더, 시크릿 안전 관리. |
-| 7 | **Innovation & Originality** | 5% | "음성으로 다이어그램을 편집"하는 거의 없는 인터랙션 + 보이스 코딩 대회 테마와 제품이 일치. |
+| 1 | **Effective Use of Copilot SDK** | 25% | `/api/agent` 기본 경로가 `@copilotkit/runtime/v2`의 `BuiltInAgent`를 실행하고, `defineTool`로 등록한 다이어그램 도구가 실제 action plan을 만든다. 응답 메타데이터에서 `agent.source="copilot-sdk"`와 등록 도구 목록을 확인 가능. |
+| 2 | **Productivity Impact & Problem Fit** | 18% | 개발자+기획자의 실제 페인(다이어그램 작성 비용)을 정조준하고, 생성/삽입/타입 전환 시나리오에서 중앙값 기준 약 67% 시간 절감 지표를 제시. |
+| 3 | **Azure AI & Cloud Integration** | 18% | Copilot SDK agent의 모델 백엔드로 **Azure OpenAI**를 연결, 음성 입력은 **Azure Speech**, 배포는 **Azure Web App**, 시크릿/관측성은 **Managed Identity + Key Vault + App Insights** 경로로 설계. |
+| 4 | **Functionality & Technical Execution** | 16% | IR→도구→직렬화기→Mermaid의 결정적 파이프라인, SSE streaming, Undo, export, session isolation을 end-to-end 테스트로 검증. |
+| 5 | **User Experience & Workflow Design** | 12% | 음성 우선 + 텍스트 폴백, 스트리밍 상태/도구 로그, 캔버스, Mermaid 원문, 내보내기, 위험 작업 확인과 Undo가 한 워크플로우에 연결. |
+| 6 | **Responsible AI, Security & Trust** | 6% | 파괴적 작업 전 사람 확인, 모델 출력 도구 제한, 세션 쿠키 격리, rate limit, CSP/HSTS, App Insights telemetry, Key Vault reference 경로. |
+| 7 | **Innovation & Originality** | 5% | 음성 명령을 Copilot SDK tool loop로 변환해 Diagram IR을 안전하게 편집하고, 플로우차트↔시퀀스 전환과 문서 내보내기를 회의 중 실시간 흐름으로 묶음. |
 
 ---
 
@@ -57,7 +57,7 @@
 
 ### Non-Goals (YAGNI — 4시간 사수를 위한 의도적 제외)
 
-- 사용자 인증/계정, 다이어그램 영속 저장(DB) — **단일 세션 인메모리**로 충분.
+- 사용자 인증/계정, 다이어그램 영속 저장(DB) — HTTP-only 세션 쿠키 기반 인메모리 bucket으로 충분.
 - 실시간 협업/멀티유저.
 - 플로우차트·시퀀스 외 다이어그램 타입(ERD/클래스/간트 등) — 시간 남으면 stretch.
 - 모바일 최적화, 다국어 UI, 테마 커스터마이즈.
@@ -92,10 +92,11 @@
         ▼
 [백엔드 / Next.js API Route (Node, TS)]
   └─ Copilot SDK 에이전트 루프
-       ├─ 모델 계층: Azure OpenAI (gpt-4o 계열 배포)
-       ├─ 도구(tools): IR을 변경하는 함수들
+       ├─ `BuiltInAgent`: 기본 계획/도구 호출 루프
+       ├─ 모델 계층: Azure OpenAI (SDK model adapter)
+       ├─ `defineTool`: IR을 변경하는 서버 도구 등록
        ├─ 컨텍스트: 현재 IR + 최근 대화
-       └─ 스트리밍: 도구 호출/결과를 토큰 단위로 전송
+  └─ 스트리밍: `status/plan/action/done` 이벤트를 SSE로 전송
         │  변경된 IR
         ▼
 [IR 스토어 (인메모리, 세션 단위)]  ──▶  [직렬화기 IR→Mermaid]  ──▶ 브라우저 렌더
@@ -106,12 +107,9 @@
 
 ### 6.1 모델 계층 — Azure 정합성 확보 (사전 확인 필수)
 
-- **1순위:** Copilot SDK가 Azure OpenAI 엔드포인트를 모델 백엔드로 지정할 수 있으면 → 그대로 구성(심사 3번 만점 경로).
-- **차선(미지원 시):** 에이전트 오케스트레이션/도구 호출은 Copilot SDK가 담당하고, **의미 있는 AI 작업을 Azure OpenAI로 분리**해 18%를 확보한다. 예:
-  - 자연어 → IR 의도 보강(모호한 요청 구조화),
-  - "누락된 단계 제안" / "이 다이어그램 한 줄 설명 생성",
-  - 타입 전환 시 의미 재구성.
-- 둘 중 어떤 경로든 **모델 추론이 Azure OpenAI 위에서 실제로 일어나도록** 한다(단순 끼워넣기 금지 — 심사 기준 명시 감점 항목).
+- **구현 경로:** Copilot SDK `BuiltInAgent`가 Azure OpenAI 모델 어댑터를 사용해 도구 호출 계획을 생성한다.
+- **도구 경로:** `defineTool`로 등록한 `create_flow_from_steps`, `insert_node_between`, `connect`, `relabel`, `switch_type`, `clear` 등 실제 서버 도구가 SDK agent에 노출된다.
+- **fallback 경로:** SDK/모델 한도 또는 네트워크 장애 시에만 Azure 직접 planner 또는 로컬 안전 플래너로 내려간다.
 
 ---
 
@@ -140,6 +138,17 @@
 - **스트리밍:** 도구 호출 → IR 변경 → 렌더를 토큰/이벤트 단위로 흘려보내 지연을 체감시키지 않음.
 - **검증:** 도구 적용 후 IR을 스키마 검증, 깨진 참조(존재하지 않는 id)면 에이전트에 피드백해 자가 수정.
 - **결정적 출력:** 모델은 자유 텍스트로 Mermaid를 만들지 않는다 — 오직 도구로 IR을 바꾼다(환각·문법오류 차단).
+
+### 7.3 Copilot 중심 구현 경계
+
+- Copilot 중심 오케스트레이션 모듈: `lib/ai/copilot-runtime.ts`
+- 책임 범위:
+  - 계획 수립(Copilot SDK `BuiltInAgent` + Azure OpenAI model adapter)
+  - 도구 등록(`defineTool` 기반 서버 도구 레지스트리)
+  - fallback 라우팅(한도/모호성 상황)
+  - 도구 실행 디스패치(`executeCopilotToolAction`)
+  - 스트리밍 이벤트 경계(`status/plan/action/done`)
+- API 진입점(`app/api/agent/route.ts`)은 Copilot 런타임 루프 호출과 스트리밍 전달에 집중한다.
 
 ---
 
@@ -176,10 +185,11 @@ type DiagramIR = FlowchartIR | SequenceIR;
 |---|---|---|
 | 모델/추론 | **Azure OpenAI** (gpt-4o 계열 배포) | 에이전트 모델 계층 / 의도 보강 / 타입 전환 |
 | 음성 입력 | **Azure Speech-to-Text** | 브라우저 마이크 → 텍스트 명령 |
-| 배포 | **Azure Container Apps** (또는 App Service) | 컨테이너 기반 웹 앱 배포 |
-| 시크릿 | **Azure Key Vault** / 컨테이너 환경변수 | API 키 안전 관리(코드/리포 노출 금지) |
+| 배포 | **Azure Web App** | Next.js standalone 앱 배포 |
+| 시크릿 | **Azure Key Vault** / App Settings reference | API 키 안전 관리(코드/리포 노출 금지) |
+| 관측성 | **Application Insights** | agent plan/action/done, latency, 429, exception 이벤트 수집 |
 
-> 클라우드 네이티브 가점: 컨테이너화 + 환경변수 주입 + (여유 시) 헬스체크/스케일 설정.
+> 클라우드 네이티브 가점: `infra/main.bicep`가 Web App system-assigned Managed Identity, Key Vault reference, Application Insights connection string을 정의한다.
 
 ---
 
@@ -188,7 +198,9 @@ type DiagramIR = FlowchartIR | SequenceIR;
 - **파괴적 작업 확인:** `clear`(전체 삭제) 등은 실행 전 사용자 확인 단계.
 - **출력 투명성:** 에이전트가 "무엇을 왜 바꿨는지"를 도구 호출 로그로 노출 → 사용자가 주도권 유지.
 - **환각 완화:** 모델은 IR만 변경하고 직렬화는 결정적 → 잘못된 문법/유령 요소 차단, 깨진 참조는 자가 수정 루프.
-- **시크릿:** 모든 키는 Key Vault/환경변수. 프런트로 노출 금지, 리포 커밋 금지.
+- **시크릿:** 모든 키는 Key Vault reference/서버 환경변수. 프런트로 노출 금지, 리포 커밋 금지.
+- **세션 격리:** HTTP-only `malgrim_session` 쿠키 기준으로 Diagram IR과 Undo history를 분리한다.
+- **운영 신뢰:** API별 rate limit과 App Insights telemetry로 429/오류/latency를 추적한다.
 - **프롬프트 인젝션 인지:** 사용자 발화는 "데이터"로 취급, 시스템 프롬프트 권한을 넘기지 않음.
 
 ---
@@ -198,7 +210,7 @@ type DiagramIR = FlowchartIR | SequenceIR;
 - **프런트:** Next.js(App Router) + React + TypeScript, Mermaid.js 렌더.
 - **백엔드:** Next.js API Route(Node/TS), Copilot SDK 에이전트.
 - **AI:** Azure OpenAI(모델), Azure Speech(STT).
-- **배포:** Docker → Azure Container Apps.
+- **배포:** Azure Web App standalone zip.
 - **상태:** 세션 인메모리(IR 스토어). DB 없음.
 
 ---
@@ -211,7 +223,7 @@ type DiagramIR = FlowchartIR | SequenceIR;
 - [ ] **IR 타입 + 직렬화기 + 라벨 리졸버 골격** 작성(보이스로 짜기 어려운 부분 선제 처리).
 - [ ] 도구 함수 스텁(시그니처만) + 에이전트 루프 뼈대.
 - [ ] `AGENTS.md`(아키텍처·폴더 구조·코딩 규칙) 및 본 `PRD.md` 정비 → 보이스 세션에서 에이전트가 흔들리지 않게.
-- [ ] Azure 리소스 프로비저닝: OpenAI 배포, Speech 키, Container Apps, Key Vault에 시크릿 등록.
+- [ ] Azure 리소스 프로비저닝: OpenAI 배포, Speech 키, Web App, Key Vault, Application Insights 구성.
 
 ### 본 입코딩 (12:30–16:30, 음성)
 
@@ -242,7 +254,7 @@ type DiagramIR = FlowchartIR | SequenceIR;
 
 | 리스크 | 영향 | 대응 |
 |---|---|---|
-| Copilot SDK ↔ Azure OpenAI 연동 불확실 | 18% 경로 위협 | 사전에 연동 확인. 미지원 시 "오케스트레이션=SDK, 추론작업=Azure OpenAI" 분리 설계(§6.1) |
+| Copilot SDK agent 실행 실패/429 | 25% 핵심 경로 위협 | 기본 경로는 `BuiltInAgent + defineTool`, 실패 시 Azure 직접 planner/local fallback으로 안전하게 degrade. 응답 `agent.source`로 경로 노출. |
 | 음성 인식 오류/데모장 소음 | 데모 중단 | 텍스트 폴백 상시 제공, 핵심 명령은 짧고 명확하게 |
 | `switch_type` 의미 변환 난이도 | 와우 포인트 미완 | stretch로 강등 가능하게 모듈 분리, 실패해도 코어 데모 무결 |
 | 보이스로 복잡 로직 작성 지연 | 완주 위협 | 직렬화기·IR 등 난해부는 사전 준비, 보이스 세션은 도구 결선에 집중 |
@@ -253,8 +265,10 @@ type DiagramIR = FlowchartIR | SequenceIR;
 ## 14. 성공 기준 (Definition of Done)
 
 - Azure 배포 URL에서 **음성으로** 플로우차트 생성 → 증분 편집 → 내보내기가 end-to-end 동작.
+- `/api/agent` 기본 경로에서 `agent.source="copilot-sdk"`, `BuiltInAgent`, `defineTool` 메타데이터가 확인된다.
 - 시퀀스 타입 및 타입 전환이 데모에서 무중단 시연(코어 미달 시 stretch로 처리하되 코어는 필수).
 - 위험 작업 확인, 도구 호출 로그 노출 등 Responsible AI 요소 시연 가능.
+- `npm run typecheck`와 전체 테스트(unit 21 + E2E 19)가 통과한다.
 - 제한 시간 내 **제출 완료**.
 
 ---

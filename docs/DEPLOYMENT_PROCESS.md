@@ -356,6 +356,88 @@ curl -I -L --max-time 60 https://malgrim-web-06201224.azurewebsites.net/
 curl -sS --max-time 60 https://malgrim-web-06201224.azurewebsites.net/api/agent | head -c 500
 ```
 
+## 표준 재배포 절차 (Web App)
+
+아래 절차를 배포 표준 단계로 사용한다.
+
+1. standalone 산출물 빌드
+
+```bash
+npm run build
+```
+
+2. 배포 zip 패키지 생성
+
+```bash
+rm -rf /tmp/malgrim-package
+mkdir -p /tmp/malgrim-package/.next
+cp -R .next/standalone/. /tmp/malgrim-package/
+cp -R .next/static /tmp/malgrim-package/.next/static
+if [[ -d public ]]; then cp -R public /tmp/malgrim-package/public; fi
+(cd /tmp/malgrim-package && zip -qr /tmp/malgrim-standalone.zip .)
+```
+
+3. run-from-package 설정 + zip 배포 + 재시작
+
+```bash
+az webapp config appsettings set -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 \
+  --settings WEBSITE_RUN_FROM_PACKAGE=1 SCM_DO_BUILD_DURING_DEPLOYMENT=false ENABLE_ORYX_BUILD=false
+
+az webapp deployment source config-zip -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 \
+  --src /tmp/malgrim-standalone.zip --timeout 1200
+
+az webapp restart -g rg-hackathon-web-260620110035 -n malgrim-web-06201224
+```
+
+## 롤백 절차 (Web App)
+
+배포 직후 장애가 발생하면 직전 정상 패키지로 즉시 롤백한다.
+
+1. 직전 정상 zip 파일 준비(예: `/tmp/malgrim-standalone-prev.zip`)
+2. 같은 명령으로 재배포
+
+```bash
+az webapp deployment source config-zip -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 \
+  --src /tmp/malgrim-standalone-prev.zip --timeout 1200
+
+az webapp restart -g rg-hackathon-web-260620110035 -n malgrim-web-06201224
+```
+
+3. 헬스체크와 API 스모크 재확인
+
+```bash
+curl -I -L --max-time 60 https://malgrim-web-06201224.azurewebsites.net/
+curl -sS --max-time 60 https://malgrim-web-06201224.azurewebsites.net/api/agent | head -c 500
+```
+
+## 스모크 테스트 기록 템플릿
+
+배포 직후 아래 템플릿을 복사해 결과를 기록한다.
+
+```text
+[Smoke Test Record]
+Timestamp:
+URL: https://malgrim-web-06201224.azurewebsites.net/
+
+1) Home Health
+- Command: curl -I -L --max-time 60 <URL>
+- Result: PASS/FAIL
+
+2) Agent Path
+- Command: POST /api/agent
+- Expected: source=azure-openai
+- Result: PASS/FAIL
+
+3) Correction Path
+- Command: POST /api/correction
+- Expected: source=azure-openai (or documented fallback reason)
+- Result: PASS/FAIL
+
+4) Voice E2E (deployed)
+- Scenario: corrects safe final speech text before writing it into the command input
+- Result: PASS/FAIL
+```
+
 ## 배포 전 최종 체크리스트
 
 - [ ] `git status --short`로 의도하지 않은 변경 확인

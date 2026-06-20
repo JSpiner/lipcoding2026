@@ -375,27 +375,108 @@ button:disabled {
 }
 
 .diagram-stage {
-  align-items: center;
   background:
     linear-gradient(90deg, rgba(17, 17, 17, 0.08) 1px, transparent 1px),
     linear-gradient(180deg, rgba(17, 17, 17, 0.08) 1px, transparent 1px),
     var(--mg-paper);
   background-size: 32px 32px;
-  display: flex;
   flex: 1;
-  justify-content: center;
   min-height: 340px;
-  overflow: auto;
-  padding: 24px;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
 }
 
-.diagram-stage > div {
+.diagram-viewport {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 340px;
+  width: 100%;
+}
+
+.diagram-controls {
+  align-items: center;
+  background: var(--mg-white);
+  border-bottom: var(--mg-border-width) solid var(--mg-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 8px;
+  position: relative;
+  z-index: 2;
+}
+
+.diagram-control-button,
+.diagram-zoom-readout {
+  align-items: center;
+  background: var(--mg-yellow);
+  border: var(--mg-border-width) solid var(--mg-border);
+  color: var(--mg-ink);
+  display: inline-flex;
+  font-family: var(--mg-font-display);
+  font-size: 13px;
+  font-weight: 900;
+  height: 34px;
+  justify-content: center;
+  min-width: 38px;
+  padding: 4px 8px;
+}
+
+.diagram-control-button {
+  box-shadow: var(--mg-shadow-hard-sm);
+}
+
+.diagram-control-button:active {
+  box-shadow: none;
+  transform: translate(3px, 3px);
+}
+
+.diagram-control-reset {
+  background: var(--mg-blue);
+  min-width: 48px;
+}
+
+.diagram-zoom-readout {
+  background: var(--mg-white);
+  font-family: var(--mg-font-mono);
+  min-width: 62px;
+}
+
+.diagram-pan-surface {
+  align-items: center;
+  cursor: grab;
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+  padding: 24px;
+  touch-action: none;
+}
+
+.diagram-pan-surface-active {
+  cursor: grabbing;
+}
+
+.diagram-transform-layer {
   max-width: 100%;
+  transform-origin: 0 0;
+  user-select: none;
+  will-change: transform;
+}
+
+.diagram-stage > .empty-state {
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .diagram-stage svg {
   height: auto;
   max-width: 100%;
+  pointer-events: none;
 }
 
 .diagram-stage svg .node rect,

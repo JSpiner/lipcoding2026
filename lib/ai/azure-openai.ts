@@ -39,7 +39,7 @@ export type AgentToolAction = {
 export type AgentPlan = {
   summary: string;
   actions: AgentToolAction[];
-  source: "azure-openai" | "local-fallback";
+  source: "copilot-sdk" | "azure-openai" | "local-fallback";
 };
 
 type AzureChatResponse = {

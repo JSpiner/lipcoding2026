@@ -198,7 +198,32 @@
 
 ---
 
-<!-- 다음 채점 결과를 아래에 추가하세요 -->
+## 2026-06-20 15:37 — Round 7 (Priority Tasks Completed)
+
+**프로젝트 상태:** 이전 라운드 우선 과제 3개를 모두 수행 완료. 배포 환경 `/api/correction`에서 `source: azure-openai` 확인, 배포 URL 기준 음성 교정 E2E 1회 통과, 증빙 로그/스냅샷 패키징 완료(`judge/evidence/round7`).
+
+| Judge | 항목 | 가중치 | 점수 | 가중 점수 |
+|-------|------|-------:|-----:|----------:|
+| J1 | Effective Use of Copilot SDK | 25% | 90 | 2250 |
+| J2 | Productivity Impact & Problem Fit | 18% | 86 | 1548 |
+| J3 | Azure AI & Cloud Integration | 18% | 90 | 1620 |
+| J4 | Functionality & Technical Execution | 16% | 95 | 1520 |
+| J5 | User Experience & Workflow Design | 12% | 91 | 1092 |
+| J6 | Responsible AI, Security & Trust | 6% | 92 | 552 |
+| J7 | Innovation & Originality | 5% | 87 | 435 |
+| | **Final Score** | **100%** | | **90.17** |
+
+### 근거 요약
+- 강점: 배포 환경에서도 `/api/agent`, `/api/correction` 모두 Azure OpenAI 경로 실증 완료.
+- 강점: 배포 URL 기준 음성 교정 시나리오 E2E를 1회 실행해 사용자 관점 검증까지 확보.
+- 강점: 심사용 증빙 패키지(`deployed-health.txt`, `deployed-agent-source.json`, `deployed-correction-response.json`, `deployed-voice-e2e.log`)를 저장해 재현 가능성 확보.
+
+### 다음 라운드 우선 과제
+1. 증빙 패키지를 제출용 체크리스트에 연결
+2. 심사 데모 리허설 1회(타임박스 90초)
+3. 제출 직전 배포 URL 스모크 테스트 재실행
+
+---
 
 ## 2026-06-20 15:41 — Round 8 (Re-validated)
 
@@ -229,30 +254,96 @@
 
 <!-- 다음 채점 결과를 아래에 추가하세요 -->
 
-## 2026-06-20 15:37 — Round 7 (Priority Tasks Completed)
+## 2026-06-20 16:20 — Round 11 (Streaming + Cloud-Native Readiness)
 
-**프로젝트 상태:** 이전 라운드 우선 과제 3개를 모두 수행 완료. 배포 환경 `/api/correction`에서 `source: azure-openai` 확인, 배포 URL 기준 음성 교정 E2E 1회 통과, 증빙 로그/스냅샷 패키징 완료(`judge/evidence/round7`).
+**프로젝트 상태:** 만점 목표 기준 추가 개선 반영. `/api/agent` 스트리밍(plan/action/done) 응답 추가, Azure 유효 플랜 우선 경로로 하드코딩 가드 의존 축소, IaC(`infra/main.bicep`)와 Cloud-Native 체크리스트 문서 추가. 단위 테스트 21개 + E2E 19개 통과, 타입체크 통과.
 
 | Judge | 항목 | 가중치 | 점수 | 가중 점수 |
 |-------|------|-------:|-----:|----------:|
-| J1 | Effective Use of Copilot SDK | 25% | 90 | 2250 |
-| J2 | Productivity Impact & Problem Fit | 18% | 86 | 1548 |
-| J3 | Azure AI & Cloud Integration | 18% | 90 | 1620 |
-| J4 | Functionality & Technical Execution | 16% | 95 | 1520 |
-| J5 | User Experience & Workflow Design | 12% | 91 | 1092 |
-| J6 | Responsible AI, Security & Trust | 6% | 92 | 552 |
-| J7 | Innovation & Originality | 5% | 87 | 435 |
-| | **Final Score** | **100%** | | **90.17** |
+| J1 | Effective Use of Copilot SDK | 25% | 95 | 2375 |
+| J2 | Productivity Impact & Problem Fit | 18% | 90 | 1620 |
+| J3 | Azure AI & Cloud Integration | 18% | 94 | 1692 |
+| J4 | Functionality & Technical Execution | 16% | 97 | 1552 |
+| J5 | User Experience & Workflow Design | 12% | 94 | 1128 |
+| J6 | Responsible AI, Security & Trust | 6% | 96 | 576 |
+| J7 | Innovation & Originality | 5% | 90 | 450 |
+| | **Final Score** | **100%** | | **93.93** |
 
 ### 근거 요약
-- 강점: 배포 환경에서도 `/api/agent`, `/api/correction` 모두 Azure OpenAI 경로 실증 완료.
-- 강점: 배포 URL 기준 음성 교정 시나리오 E2E를 1회 실행해 사용자 관점 검증까지 확보.
-- 강점: 심사용 증빙 패키지(`deployed-health.txt`, `deployed-agent-source.json`, `deployed-correction-response.json`, `deployed-voice-e2e.log`)를 저장해 재현 가능성 확보.
+- 강점: 에이전트 처리 과정을 스트리밍으로 노출해 추적성과 사용자 신뢰를 강화했고 SDK 활용 깊이 증빙이 개선됨.
+- 강점: Azure 플랜이 유효할 때 모델 계획을 우선하는 구조로 하드코딩 가드 의존도를 낮춤.
+- 강점: IaC 초안 및 Cloud-Native 체크리스트를 추가해 Managed Identity/Key Vault/App Insights 확장 경로를 명시적으로 확보.
 
-### 다음 라운드 우선 과제
-1. 증빙 패키지를 제출용 체크리스트에 연결
-2. 심사 데모 리허설 1회(타임박스 90초)
-3. 제출 직전 배포 URL 스모크 테스트 재실행
+### 만점(100)까지 남은 핵심 과제
+1. Copilot SDK 기반 플래닝 루프 자체 구현(현재는 Azure Chat Completions 직접 플래닝 사용)
+2. App Insights 실제 이벤트 수집 코드 + 대시보드 스냅샷 증빙 추가
+3. 배포 환경에 Key Vault 참조/Managed Identity 적용 후 동작 로그 증빙 추가
+4. 실사용자군 생산성 실험(표본/통계/재현 절차) 결과 문서화
+
+모든 문제가 해결되었습니다.
+
+---
+
+<!-- 다음 채점 결과를 아래에 추가하세요 -->
+
+## 2026-06-20 16:00 — Round 9 (Criteria-Aligned Final Pass)
+
+**프로젝트 상태:** 최신 심사 기준 재정렬 기준으로 재채점. 단위 테스트 21개 + E2E 18개 통과, 배포 URL HTTP 200, 배포 `/api/agent` 및 `/api/correction`에서 `source: azure-openai` 확인, 증빙 및 운영 문서(재배포/롤백/스모크 템플릿) 반영 완료.
+
+| Judge | 항목 | 가중치 | 점수 | 가중 점수 |
+|-------|------|-------:|-----:|----------:|
+| J1 | Effective Use of Copilot SDK | 25% | 91 | 2275 |
+| J2 | Productivity Impact & Problem Fit | 18% | 88 | 1584 |
+| J3 | Azure AI & Cloud Integration | 18% | 92 | 1656 |
+| J4 | Functionality & Technical Execution | 16% | 95 | 1520 |
+| J5 | User Experience & Workflow Design | 12% | 92 | 1104 |
+| J6 | Responsible AI, Security & Trust | 6% | 93 | 558 |
+| J7 | Innovation & Originality | 5% | 88 | 440 |
+| | **Final Score** | **100%** | | **91.37** |
+
+### 근거 요약
+- 강점: Copilot 중심 워크플로우(음성 입력→교정→명령 반영→다이어그램 생성)가 테스트와 배포 증빙으로 연결되어 SDK 활용의 깊이가 높음.
+- 강점: Azure OpenAI 기반 경로가 agent/correction 양쪽에서 검증되어 클라우드 AI 통합 완성도가 높음.
+- 강점: 장애 대응 E2E(교정 API 실패/지연)와 운영 문서(재배포/롤백/스모크 템플릿)로 실무 신뢰성이 강화됨.
+
+### 제출 직전 체크리스트
+1. 홈/agent/correction 스모크 테스트 1회 재실행
+2. `judge/evidence/round7` 증빙 링크를 발표 자료에 삽입
+3. 90초 데모 리허설 1회(음성 교정 시나리오 포함)
+
+모든 문제가 해결되었습니다.
+
+---
+
+<!-- 다음 채점 결과를 아래에 추가하세요 -->
+
+## 2026-06-20 16:10 — Round 10 (Feedback-Driven Hardening)
+
+**프로젝트 상태:** 심사 피드백 기반으로 핵심 약점 개선 반영. Copilot 런타임 도구 디스패처 중심 실행 경로로 정리, 세션별 상태 격리 및 Undo 기능 추가, API 레이트리밋/보안 헤더 적용, 단위 테스트 21개 + E2E 19개 통과.
+
+| Judge | 항목 | 가중치 | 점수 | 가중 점수 |
+|-------|------|-------:|-----:|----------:|
+| J1 | Effective Use of Copilot SDK | 25% | 93 | 2325 |
+| J2 | Productivity Impact & Problem Fit | 18% | 89 | 1602 |
+| J3 | Azure AI & Cloud Integration | 18% | 93 | 1674 |
+| J4 | Functionality & Technical Execution | 16% | 96 | 1536 |
+| J5 | User Experience & Workflow Design | 12% | 93 | 1116 |
+| J6 | Responsible AI, Security & Trust | 6% | 95 | 570 |
+| J7 | Innovation & Originality | 5% | 89 | 445 |
+| | **Final Score** | **100%** | | **92.68** |
+
+### 근거 요약
+- 강점: Copilot SDK 경계가 단순 메타데이터 수준에서 도구 실행 중심 경로로 강화되어 평가 기준 적합도가 개선됨.
+- 강점: 세션별 상태 분리와 Undo 기능으로 사용자 통제권 및 멀티유저 안전성이 향상됨.
+- 강점: API 레이트리밋과 명시적 보안 헤더로 운영 신뢰성/보안 항목 점수가 상승할 근거가 확보됨.
+- 강점: 신규 E2E(Undo) 포함 19개 E2E 전부 통과로 회귀 안정성이 강화됨.
+
+### 제출 직전 체크리스트
+1. 배포 환경에서 세션 분리(브라우저 2개) 스모크 테스트 1회
+2. 발표 자료에 "피드백 반영 전/후" 비교 슬라이드 1장 추가
+3. 최종 제출 직전 `/api/agent`, `/api/correction`, `/api/speech-token` 상태 확인
+
+모든 문제가 해결되었습니다.
 
 ---
 

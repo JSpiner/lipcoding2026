@@ -28,6 +28,29 @@ test("creates a hackathon flowchart from the UI", async ({ page }) => {
   await expect(page.getByRole("button", { name: "PNG" }).first()).toBeEnabled();
 });
 
+test("zooms and pans the diagram canvas", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByLabel("텍스트 명령").fill("해커톤 진행 프로세스를 플로우차트로 생성해줘");
+  await page.getByRole("button", { name: "명령 실행" }).click();
+  await expect(page.locator("pre")).toContainText("아이디어 선정");
+
+  const transformLayer = page.getByTestId("diagram-transform-layer");
+  await expect(transformLayer).toBeVisible();
+
+  await page.getByRole("button", { name: "다이어그램 확대" }).click();
+  await expect(page.getByText("115%", { exact: true })).toBeVisible();
+  await expect(transformLayer).toHaveCSS("transform", /matrix\(1\.15/);
+
+  await page.getByRole("button", { name: "다이어그램 오른쪽 이동" }).click();
+  await page.getByRole("button", { name: "다이어그램 아래로 이동" }).click();
+  await expect(transformLayer).toHaveCSS("transform", /matrix\(1\.15, 0, 0, 1\.15, 48, 48\)/);
+
+  await page.getByRole("button", { name: "다이어그램 보기 초기화" }).click();
+  await expect(page.getByText("100%", { exact: true })).toBeVisible();
+  await expect(transformLayer).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+});
+
 test("creates a non-empty parking lot bidding flowchart", async ({ page }) => {
   await page.goto("/");
 
@@ -148,6 +171,24 @@ test("asks for confirmation before clearing and then clears the diagram", async 
 
   await expect(page.locator("pre")).toContainText("아직 생성된 Mermaid 소스가 없습니다.");
   await expect(page.getByText("clear").first()).toBeVisible();
+});
+
+test("undoes the latest diagram change", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByLabel("텍스트 명령").fill("해커톤 진행 프로세스를 플로우차트로 생성해줘");
+  await page.getByRole("button", { name: "명령 실행" }).click();
+  await expect(page.locator("pre")).toContainText("아이디어 선정");
+
+  await page.getByLabel("텍스트 명령").fill("요구사항 정리 전에 유저 인터뷰 단계를 추가해줘");
+  await page.getByRole("button", { name: "명령 실행" }).click();
+  await expect(page.locator("pre")).toContainText("유저 인터뷰");
+
+  await page.getByRole("button", { name: "마지막 변경 되돌리기" }).click();
+
+  await expect(page.locator("pre")).not.toContainText("유저 인터뷰");
+  await expect(page.locator("pre")).toContainText("요구사항 정리");
+  await expect(page.getByText("undo").first()).toBeVisible();
 });
 
 test("exposes a speech token endpoint without leaking long-lived keys", async ({ request }) => {
@@ -320,6 +361,124 @@ test("keeps destructive speech corrections manual", async ({ page }) => {
   await expect(page.getByLabel("텍스트 명령")).toHaveValue("전체 지어줘");
   await expect(page.getByLabel("음성 교정 제안")).toContainText("전체 지워줘");
   await expect(page.getByLabel("음성 교정 제안")).toContainText("위험하거나 모호한 명령은 자동 적용하지 않았습니다.");
+  await expect(page.locator("pre")).toContainText("아직 생성된 Mermaid 소스가 없습니다.");
+});
+
+test("falls back safely when correction endpoint fails", async ({ page }) => {
+  await page.addInitScript(() => {
+    class MockSpeechRecognition extends EventTarget {
+      lang = "ko-KR";
+      interimResults = true;
+      maxAlternatives = 1;
+      onresult: ((event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      onend: (() => void) | null = null;
+
+      start() {
+        setTimeout(() => {
+          this.onresult?.({
+            resultIndex: 0,
+            results: [{ 0: { transcript: "요 구 사 항 정리 전에 사용자 인터부 단계를 추가해줘" }, length: 1, isFinal: true }],
+          });
+        }, 0);
+      }
+
+      stop() {
+        this.onend?.();
+      }
+    }
+
+    Object.defineProperty(window, "SpeechRecognition", {
+      value: MockSpeechRecognition,
+      configurable: true,
+    });
+  });
+
+  await page.route("/api/speech-token", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      status: 503,
+      body: JSON.stringify({ fallback: "browser-speech" }),
+    });
+  });
+
+  await page.route("/api/correction", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      status: 503,
+      body: JSON.stringify({ message: "temporary failure" }),
+    });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "REC" }).click();
+
+  await expect(page.getByLabel("텍스트 명령")).toHaveValue("요구사항 정리 전에 사용자 인터뷰 단계를 추가해줘");
+  await expect(page.locator(".voice-readout p")).toHaveText("요구사항 정리 전에 사용자 인터뷰 단계를 추가해줘");
+  await expect(page.getByLabel("음성 교정 제안")).toContainText("AUTO CORRECT");
+  await expect(page.locator("pre")).toContainText("아직 생성된 Mermaid 소스가 없습니다.");
+});
+
+test("keeps UI responsive when correction endpoint is delayed", async ({ page }) => {
+  await page.addInitScript(() => {
+    class MockSpeechRecognition extends EventTarget {
+      lang = "ko-KR";
+      interimResults = true;
+      maxAlternatives = 1;
+      onresult: ((event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal?: boolean }> }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      onend: (() => void) | null = null;
+
+      start() {
+        setTimeout(() => {
+          this.onresult?.({
+            resultIndex: 0,
+            results: [{ 0: { transcript: "요 구 사 항 정리 전에 사용자 인터부 단계를 추가해줘" }, length: 1, isFinal: true }],
+          });
+        }, 0);
+      }
+
+      stop() {
+        this.onend?.();
+      }
+    }
+
+    Object.defineProperty(window, "SpeechRecognition", {
+      value: MockSpeechRecognition,
+      configurable: true,
+    });
+  });
+
+  await page.route("/api/speech-token", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      status: 503,
+      body: JSON.stringify({ fallback: "browser-speech" }),
+    });
+  });
+
+  await page.route("/api/correction", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    await route.fulfill({
+      contentType: "application/json",
+      status: 200,
+      body: JSON.stringify({
+        original: "요 구 사 항 정리 전에 사용자 인터부 단계를 추가해줘",
+        corrected: "요구사항 정리 전에 사용자 인터뷰 단계를 추가해줘",
+        confidence: 0.97,
+        source: "azure-openai",
+        risk: "safe",
+        applied: true,
+        reason: "Azure OpenAI 기반 교정 결과를 반영했습니다.",
+      }),
+    });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "REC" }).click();
+
+  await expect(page.getByLabel("텍스트 명령")).toHaveValue("요구사항 정리 전에 사용자 인터뷰 단계를 추가해줘");
+  await expect(page.getByLabel("음성 교정 제안")).toContainText("AUTO CORRECT");
   await expect(page.locator("pre")).toContainText("아직 생성된 Mermaid 소스가 없습니다.");
 });
 

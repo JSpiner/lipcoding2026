@@ -193,7 +193,15 @@ button:disabled {
   padding: 8px 12px;
 }
 
-.voice-readout span {
+.voice-readout-meta {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.voice-readout-meta span,
+.voice-correction span {
   font-family: var(--mg-font-mono);
   font-size: 12px;
   font-weight: 900;
@@ -204,6 +212,18 @@ button:disabled {
   font-weight: 800;
   line-height: 1.3;
   margin: 0;
+}
+
+.voice-correction {
+  border-top: 2px solid var(--mg-border);
+  display: grid;
+  gap: 4px;
+  padding-top: 8px;
+}
+
+.voice-correction-actions {
+  justify-content: flex-start;
+  margin-top: 4px;
 }
 
 .command-label-row,

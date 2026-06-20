@@ -1,0 +1,6 @@
+
+Running 1 test using 1 worker
+
+  ✓  1 [chromium] › tests/e2e/malgrim.spec.ts:232:5 › corrects safe final speech text before writing it into the command input (6.8s)
+
+  1 passed (7.2s)

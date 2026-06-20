@@ -6,6 +6,7 @@ import {
   clearDiagram,
   connect,
   createDiagram,
+  createFlowFromSteps,
   createHackathonFlow,
   createOrderFlow,
   exportDiagram,
@@ -96,6 +97,11 @@ function applyDeterministicGuards(command: string, ir: ReturnType<typeof getDiag
     return insertionPlan;
   }
 
+  const creationPlan = inferFlowchartCreationPlan(command, plan.summary, plan, plan.source);
+  if (creationPlan) {
+    return creationPlan;
+  }
+
   return plan;
 }
 
@@ -128,6 +134,8 @@ function executeAction(action: AgentToolAction): ToolResult {
       return createHackathonFlow();
     case "create_diagram":
       return createDiagram(action.type ?? "flowchart", action.title);
+    case "create_flow_from_steps":
+      return createFlowFromSteps(action.title ?? "플로우차트", action.labels ?? []);
     case "add_payment_failure_branch":
       return addPaymentFailureBranch(ir);
     case "add_node":
@@ -180,6 +188,11 @@ function planWithLocalFallback(command: string): AgentPlan {
 
   if (hasAny(normalized, ["해커톤", "해코톤", "hackathon"])) {
     return normalizePlan({ summary: "해커톤 진행 프로세스를 플로우차트로 생성합니다.", actions: [{ tool: "create_hackathon_flow" }] }, "local-fallback");
+  }
+
+  const creationPlan = inferFlowchartCreationPlan(command, "", null, "local-fallback");
+  if (creationPlan) {
+    return creationPlan;
   }
 
   if (hasAny(normalized, ["결제실패", "실패분기", "재시도"])) {
@@ -246,6 +259,41 @@ function findMentionedFlowchartLabel(ir: ReturnType<typeof getDiagramIR>, normal
   return match?.label ?? null;
 }
 
+function inferFlowchartCreationPlan(command: string, summary: string, plan: AgentPlan | null, source: AgentPlan["source"]): AgentPlan | null {
+  const text = `${command} ${summary}`.replace(/\s+/g, "").toLowerCase();
+  const isCreationRequest = hasAny(text, ["플로우차트", "흐름도", "flowchart"]) && hasAny(text, ["생성", "그려", "만들"]);
+  const onlyEmptyCreate = plan?.actions.length === 1 && plan.actions[0].tool === "create_diagram" && (plan.actions[0].type ?? "flowchart") === "flowchart";
+
+  if (!isCreationRequest && !onlyEmptyCreate) {
+    return null;
+  }
+
+  const template = inferFlowchartTemplate(text);
+  if (!template) {
+    return null;
+  }
+
+  return normalizePlan({ summary: `${template.title} 플로우차트를 생성합니다.`, actions: [{ tool: "create_flow_from_steps", title: template.title, labels: template.labels }] }, source);
+}
+
+function inferFlowchartTemplate(normalizedText: string): { title: string; labels: string[] } | null {
+  if (hasAny(normalizedText, ["주차장입찰", "주차입찰", "parkinglotbid", "parkingbid"])) {
+    return {
+      title: "주차장 입찰 로직",
+      labels: ["입찰 공고 확인", "입찰 조건 검토", "입찰가 산정", "입찰 제출", "낙찰 여부 확인", "계약 진행"],
+    };
+  }
+
+  if (hasAny(normalizedText, ["주문처리", "쇼핑몰", "온라인쇼핑몰"])) {
+    return {
+      title: "온라인 쇼핑몰 주문 처리 흐름",
+      labels: ["장바구니", "결제", "주문확정", "배송"],
+    };
+  }
+
+  return null;
+}
+
 function inferFlowchartInsertionPlan(command: string, summary: string, ir: ReturnType<typeof getDiagramIR>, source: AgentPlan["source"]): AgentPlan | null {
   if (ir?.type !== "flowchart") {
     return null;
@@ -276,6 +324,19 @@ function inferFlowchartInsertionPlan(command: string, summary: string, ir: Retur
     const afterMarker = firstIncluded(text, [`${anchor}후에`, `${anchor}이후에`, `${anchor}다음에`, `${anchor}뒤에`]);
     if (afterMarker) {
       const label = extractInsertedLabel(text.slice(text.indexOf(afterMarker) + afterMarker.length), ir);
+      const successor = findSingleSuccessor(ir, node.id);
+
+      if (label && successor) {
+        return normalizePlan(
+          { summary: `${node.label} 다음에 ${label} 단계를 추가합니다.`, actions: [{ tool: "insert_node_between", after: node.label, before: successor.label, label }] },
+          source,
+        );
+      }
+    }
+
+    const fromMarker = firstIncluded(text, [`${anchor}에서`]);
+    if (fromMarker) {
+      const label = extractInsertedLabel(text.slice(text.indexOf(fromMarker) + fromMarker.length), ir);
       const successor = findSingleSuccessor(ir, node.id);
 
       if (label && successor) {
@@ -333,6 +394,8 @@ function formatInsertedLabel(value: string): string {
     점수측정: "점수 측정",
     요구사항검증: "요구사항 검증",
     시장조사: "시장 조사",
+    수량변경: "수량 변경",
+    수량을변경하는: "수량 변경",
   };
 
   return knownLabels[value] ?? value;

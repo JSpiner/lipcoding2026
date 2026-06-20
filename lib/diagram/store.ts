@@ -1,4 +1,5 @@
 import { serializeDiagram } from "./serialize";
+import { resetDiagramToolSequences } from "./tools";
 import type { DiagramIR, DiagramResponse, DiagramState, ToolLogEntry, ToolResult } from "./types";
 
 let state: DiagramState = {
@@ -44,6 +45,18 @@ export function requestClear(): DiagramResponse {
 export function cancelClear(): DiagramResponse {
   state = {
     ...state,
+    pendingClear: false,
+    message: undefined,
+  };
+
+  return getDiagramResponse();
+}
+
+export function resetDiagramState(): DiagramResponse {
+  resetDiagramToolSequences();
+  state = {
+    ir: null,
+    logs: [],
     pendingClear: false,
     message: undefined,
   };

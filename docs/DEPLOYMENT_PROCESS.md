@@ -10,6 +10,7 @@
 - Azure OpenAI resource: `malgrim-openai-sweden-06201224`
 - Azure OpenAI deployment: `malgrim-gpt-4o`
 - Runtime port: `3000`
+- 공개 배포 URL(README 기준): `https://malgrim-web-06201224.azurewebsites.net/`
 
 ## 저장소 배포 준비
 
@@ -321,6 +322,40 @@ curl -sS -X POST "https://$APP_FQDN/api/agent" \
 - Container Apps의 target port는 Dockerfile의 `PORT=3000`과 맞춰 `3000`으로 설정한다.
 - Azure OpenAI 429가 발생하면 현재 앱은 로컬 fallback으로 응답할 수 있다. 실제 Azure 연동 여부는 API 응답의 `agent.source`가 `azure-openai`인지 확인한다.
 
+### run-from-package 실패 대응(Web App)
+
+`az webapp deployment source config-zip`가 실패할 때는 아래 순서로 원인을 분리한다.
+
+1. 앱 존재/상태 확인
+
+```bash
+az webapp show -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --query '{state:state,host:defaultHostName}' -o json
+```
+
+2. Kudu 배포 로그 확인
+
+```bash
+az webapp log deployment list -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 -o table
+az webapp log deployment show -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 --deployment-id <ID>
+```
+
+3. 설정 강제 재적용 후 재배포
+
+```bash
+az webapp config appsettings set -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 \
+  --settings WEBSITE_RUN_FROM_PACKAGE=1 SCM_DO_BUILD_DURING_DEPLOYMENT=false ENABLE_ORYX_BUILD=false
+
+az webapp deployment source config-zip -g rg-hackathon-web-260620110035 -n malgrim-web-06201224 \
+  --src /tmp/malgrim-standalone.zip --timeout 1200
+```
+
+4. 즉시 헬스체크
+
+```bash
+curl -I -L --max-time 60 https://malgrim-web-06201224.azurewebsites.net/
+curl -sS --max-time 60 https://malgrim-web-06201224.azurewebsites.net/api/agent | head -c 500
+```
+
 ## 배포 전 최종 체크리스트
 
 - [ ] `git status --short`로 의도하지 않은 변경 확인
@@ -329,6 +364,7 @@ curl -sS -X POST "https://$APP_FQDN/api/agent" \
 - [ ] `npm test` 통과
 - [ ] Docker 이미지 build/push 성공
 - [ ] Container App revision 상태 정상
+- [ ] Web App URL `https://malgrim-web-06201224.azurewebsites.net/` HTTP 200 확인
 - [ ] `/` HTTP 200 확인
 - [ ] `/api/agent` GET 확인
 - [ ] `/api/agent` POST smoke test에서 `source: azure-openai` 확인

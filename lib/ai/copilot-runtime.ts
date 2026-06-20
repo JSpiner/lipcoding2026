@@ -3,6 +3,7 @@ import { CopilotRuntime } from "@copilotkit/runtime/v2";
 export const copilotToolNames = [
   "create_order_flow",
   "create_hackathon_flow",
+  "create_flow_from_steps",
   "add_payment_failure_branch",
   "create_diagram",
   "add_node",

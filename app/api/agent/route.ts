@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { cancelClear, getDiagramResponse } from "@/lib/diagram/store";
+import { cancelClear, getDiagramResponse, resetDiagramState } from "@/lib/diagram/store";
 import { confirmAgentClear, runDiagramAgent } from "@/lib/ai/agent";
 
 type AgentRequest = {
   command?: string;
   confirmClear?: boolean;
   cancelClear?: boolean;
+  reset?: boolean;
 };
 
 export async function GET() {
@@ -21,6 +22,10 @@ export async function POST(request: Request) {
 
   if (body.cancelClear) {
     return NextResponse.json(cancelClear());
+  }
+
+  if (body.reset) {
+    return NextResponse.json(resetDiagramState());
   }
 
   const command = body.command?.trim() ?? "";

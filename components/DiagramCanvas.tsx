@@ -27,12 +27,19 @@ export function DiagramCanvas({ mermaid }: DiagramCanvasProps) {
           startOnLoad: false,
           theme: "base",
           themeVariables: {
-            primaryColor: "#e5f4f1",
-            primaryTextColor: "#18212f",
-            primaryBorderColor: "#0f766e",
-            lineColor: "#415466",
-            secondaryColor: "#f4f7fb",
-            tertiaryColor: "#fff8eb",
+            primaryColor: "#ffe14d",
+            primaryTextColor: "#111111",
+            primaryBorderColor: "#111111",
+            lineColor: "#111111",
+            secondaryColor: "#00a3ff",
+            secondaryBorderColor: "#111111",
+            tertiaryColor: "#20e070",
+            tertiaryBorderColor: "#111111",
+            noteBkgColor: "#fff7d6",
+            noteBorderColor: "#111111",
+            actorBkg: "#ffffff",
+            actorBorder: "#111111",
+            actorTextColor: "#111111",
           },
         });
 
@@ -58,7 +65,7 @@ export function DiagramCanvas({ mermaid }: DiagramCanvasProps) {
   }, [mermaid]);
 
   if (!mermaid.trim()) {
-    return <div className="empty-state">예시 명령을 실행하면 이 영역에 다이어그램이 표시됩니다.</div>;
+    return <div className="empty-state">COMMAND IN. DIAGRAM OUT.</div>;
   }
 
   if (error) {

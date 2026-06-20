@@ -26,19 +26,25 @@ export function CommandInput({ disabled, onSubmit }: CommandInputProps) {
   return (
     <>
       <form className="command-form" onSubmit={handleSubmit}>
-        <label className="section-title" htmlFor="command">
-          텍스트 명령
-        </label>
-        <textarea
-          className="command-input"
-          disabled={disabled}
-          id="command"
-          onChange={(event) => setCommand(event.target.value)}
-          value={command}
-        />
-        <button className="primary-button" disabled={disabled || !command.trim()} type="submit">
-          명령 실행
-        </button>
+        <div className="command-label-row">
+          <label className="section-title" htmlFor="command">
+            VOICE COMMAND
+          </label>
+          <span className={disabled ? "rec-badge rec-badge-busy" : "rec-badge"}>{disabled ? "AGENT" : "READY"}</span>
+        </div>
+        <div className="command-input-row">
+          <textarea
+            aria-label="텍스트 명령"
+            className="command-input"
+            disabled={disabled}
+            id="command"
+            onChange={(event) => setCommand(event.target.value)}
+            value={command}
+          />
+          <button className="primary-button" disabled={disabled || !command.trim()} type="submit">
+            명령 실행
+          </button>
+        </div>
       </form>
 
       <div className="suggestions" aria-label="예시 명령">

@@ -69,56 +69,69 @@ export default function Home() {
 
   return (
     <main className="shell">
-      <header className="header">
-        <div>
-          <p className="eyebrow">MalGrim · SpeakDraw</p>
-          <h1>말하면 그려지는 다이어그램</h1>
-          <p>2단계: 에이전트가 명령을 도구 호출로 바꿔 IR을 편집하고 Mermaid로 렌더링합니다.</p>
+      <header className="top-bar">
+        <div className="brand-block">
+          <span className="brand-mark">MALGRIM / 말그림</span>
+          <span className="brand-subtitle">SpeakDraw</span>
         </div>
-        <span className="status-pill">Agent API 준비됨</span>
+        <div className="session-strip" aria-label="세션 상태">
+          <span className={isBusy ? "state-badge state-badge-busy" : "state-badge"}>{isBusy ? "해석 중" : "LIVE SESSION"}</span>
+          <button className="top-action" disabled={!state.mermaid} onClick={copyMermaid} type="button">
+            EXPORT MERMAID
+          </button>
+        </div>
       </header>
 
+      <section className={isBusy ? "command-strip command-strip-busy" : "command-strip"}>
+        <CommandInput disabled={isBusy} onSubmit={submitCommand} />
+      </section>
+
       <div className="workspace">
-        <aside className="panel">
-          <CommandInput disabled={isBusy} onSubmit={submitCommand} />
+        <section className="canvas-panel" aria-label="다이어그램 캔버스">
+          <div className="panel-header">
+            <h1>DIAGRAM CANVAS</h1>
+            <span className="panel-counter">{state.ir ? state.ir.type : "EMPTY"}</span>
+          </div>
+          <div className="diagram-stage">
+            <DiagramCanvas mermaid={state.mermaid} />
+          </div>
+        </section>
+
+        <aside className="trace-panel" aria-label="에이전트 추적">
+          <div className="panel-header panel-header-trace">
+            <h2>AGENT TRACE</h2>
+            <span className="panel-counter">{state.logs.length} CALLS</span>
+          </div>
 
           {state.message ? <div className="notice">{state.message}</div> : null}
 
           {state.pendingClear ? (
-            <div className="button-row">
-              <button className="danger-button" disabled={isBusy} onClick={confirmClear} type="button">
-                삭제 승인
-              </button>
-              <button className="secondary-button" disabled={isBusy} onClick={cancelClear} type="button">
-                취소
-              </button>
+            <div className="confirm-panel">
+              <strong>확인 필요</strong>
+              <div className="button-row">
+                <button className="danger-button" disabled={isBusy} onClick={confirmClear} type="button">
+                  삭제 승인
+                </button>
+                <button className="secondary-button" disabled={isBusy} onClick={cancelClear} type="button">
+                  취소
+                </button>
+              </div>
             </div>
           ) : null}
 
           <ToolLog logs={state.logs} />
         </aside>
-
-        <section className="main-column">
-          <div className="canvas-panel">
-            <div className="canvas-header">
-              <h2 className="canvas-title">다이어그램 미리보기</h2>
-              <button className="secondary-button" disabled={!state.mermaid} onClick={copyMermaid} type="button">
-                Mermaid 복사
-              </button>
-            </div>
-            <div className="diagram-stage">
-              <DiagramCanvas mermaid={state.mermaid} />
-            </div>
-          </div>
-
-          <div className="mermaid-source">
-            <div className="source-header">
-              <h2>Mermaid 소스</h2>
-            </div>
-            <pre>{state.mermaid || "아직 생성된 Mermaid 소스가 없습니다."}</pre>
-          </div>
-        </section>
       </div>
+
+      <section className="mermaid-source" aria-label="Mermaid 원문">
+        <div className="source-header">
+          <h2>MERMAID SOURCE / RAW OUTPUT</h2>
+          <button className="secondary-button" disabled={!state.mermaid} onClick={copyMermaid} type="button">
+            COPY
+          </button>
+        </div>
+        <pre>{state.mermaid || "아직 생성된 Mermaid 소스가 없습니다."}</pre>
+      </section>
     </main>
   );
 }

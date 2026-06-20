@@ -200,6 +200,35 @@
 
 <!-- 다음 채점 결과를 아래에 추가하세요 -->
 
+## 2026-06-20 15:41 — Round 8 (Re-validated)
+
+**프로젝트 상태:** 최신 재검증 완료. 단위 테스트 21개 + E2E 15개 전부 통과, 배포 URL HTTP 200 확인, 배포 `/api/agent`와 `/api/correction` 모두 `source: azure-openai` 확인.
+
+| Judge | 항목 | 가중치 | 점수 | 가중 점수 |
+|-------|------|-------:|-----:|----------:|
+| J1 | Effective Use of Copilot SDK | 25% | 90 | 2250 |
+| J2 | Productivity Impact & Problem Fit | 18% | 86 | 1548 |
+| J3 | Azure AI & Cloud Integration | 18% | 91 | 1638 |
+| J4 | Functionality & Technical Execution | 16% | 95 | 1520 |
+| J5 | User Experience & Workflow Design | 12% | 91 | 1092 |
+| J6 | Responsible AI, Security & Trust | 6% | 92 | 552 |
+| J7 | Innovation & Originality | 5% | 87 | 435 |
+| | **Final Score** | **100%** | | **90.35** |
+
+### 근거 요약
+- 강점: 로컬/배포 환경 모두에서 핵심 기능과 테스트가 안정적으로 통과함.
+- 강점: 배포 환경에서 `/api/correction` Azure 경로까지 재확인되어 클라우드 AI 실증이 강화됨.
+- 메모: 배포 URL 헬스체크는 일시 타임아웃 후 재시도에서 200으로 정상 확인.
+
+### 다음 라운드 우선 과제
+1. 제출 직전 스모크 테스트(홈/agent/correction) 1회 재실행
+2. 심사 발표 자료에 `judge/evidence/round7` 링크 첨부
+3. 발표 리허설 90초 타임박스 점검
+
+---
+
+<!-- 다음 채점 결과를 아래에 추가하세요 -->
+
 ## 2026-06-20 15:37 — Round 7 (Priority Tasks Completed)
 
 **프로젝트 상태:** 이전 라운드 우선 과제 3개를 모두 수행 완료. 배포 환경 `/api/correction`에서 `source: azure-openai` 확인, 배포 URL 기준 음성 교정 E2E 1회 통과, 증빙 로그/스냅샷 패키징 완료(`judge/evidence/round7`).

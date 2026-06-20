@@ -26,9 +26,15 @@
 
 - `APPLICATIONINSIGHTS_CONNECTION_STRING` 설정
 - 최소 추적 이벤트
-  - agent request start/end
-  - correction request start/end
-  - speech-token success/fallback
+  - `agent_plan_created`
+  - `agent_action_executed`
+  - `agent_run_completed`
+  - `agent_rate_limited`
+  - `agent_execution_ms`
+  - agent exception
+- 구현 파일
+  - `lib/server/telemetry.ts`: `APPLICATIONINSIGHTS_CONNECTION_STRING`을 파싱해 Azure Monitor ingestion endpoint(`/v2/track`)로 event/metric/exception 전송
+  - `app/api/agent/route.ts`: SSE plan/action/done, 429, exception 경로에 telemetry 연결
 - 대시보드에서 확인할 지표
   - p95 latency
   - 4xx/5xx 비율

@@ -7,7 +7,7 @@
 ## 1. 제품 요약
 
 말그림은 자연어/음성 명령으로 다이어그램을 생성·편집하는 생산성 도구다.
-핵심은 Copilot SDK 중심 에이전트 루프다. 사용자 명령은 Copilot Runtime 루프에서 계획(plan) 수립, 가드 적용, 도구 실행(action), 완료(done)까지 처리되고 Mermaid로 렌더링된다.
+핵심은 Copilot SDK 중심 에이전트 루프다. 사용자 명령은 `@copilotkit/runtime/v2`의 `BuiltInAgent`가 Azure OpenAI model adapter와 `defineTool` 등록 도구를 사용해 계획(plan) 수립, 가드 적용, 도구 실행(action), 완료(done)까지 처리하고 Mermaid로 렌더링된다.
 
 ## 2. 문제 정의
 
@@ -37,6 +37,7 @@
 
 - 배포 URL에서 end-to-end 동작
 - `/api/agent`가 Copilot Runtime 중심 루프로 명령을 처리
+- `/api/agent` 기본 경로에서 `agent.source="copilot-sdk"`, `BuiltInAgent`, `defineTool` 메타데이터 확인 가능
 - `/api/agent` 스트리밍 이벤트(status/plan/action/done) 동작
 - 파괴적 명령 확인/취소 및 Undo 제공
 - 단위 테스트 + E2E 테스트 통과
@@ -119,11 +120,12 @@ COPY, MMD, SVG, PNG 내보내기를 지원한다.
 - 안정성: Copilot 런타임이 계획/검증/실행 순서를 통제
 - 보안: 시크릿은 서버 환경변수/Key Vault reference 사용
 - 신뢰: 파괴적 명령 확인 + Undo + 실행 로그
-- 운영성: rate limit, 보안 헤더, 배포 스모크 체크
+- 운영성: rate limit, 보안 헤더, App Insights telemetry, 배포 스모크 체크
 
 ## 9. Azure 구성
 
 - Azure OpenAI: 계획 추론
+- Copilot SDK: `BuiltInAgent` + `defineTool` 기반 에이전트 실행 중심
 - Azure Speech: 음성 인식
 - Azure Web App: 서비스 배포
 - Key Vault + Managed Identity: 시크릿 접근(Cloud-Native 경로)
@@ -141,4 +143,5 @@ COPY, MMD, SVG, PNG 내보내기를 지원한다.
 - 구현 계획: docs/IMPLEMENTATION_PLAN.md
 - 배포 절차: docs/DEPLOYMENT_PROCESS.md
 - Cloud-Native 체크리스트: docs/CLOUD_NATIVE_CHECKLIST.md
+- 심사 정렬 근거: docs/JUDGE_ALIGNMENT.md
 - 점수 이력: judge/score-history.md

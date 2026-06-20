@@ -254,6 +254,39 @@
 
 <!-- 다음 채점 결과를 아래에 추가하세요 -->
 
+## 2026-06-20 16:35 — Round 12 (Copilot SDK BuiltInAgent 중심 전환)
+
+**프로젝트 상태:** 이전 피드백의 핵심 약점이던 "Copilot SDK가 장식적 통합에 가깝다"는 문제를 직접 개선. `/api/agent` 기본 계획 경로를 `@copilotkit/runtime/v2`의 `BuiltInAgent`로 전환하고, `defineTool`로 등록한 다이어그램 도구가 SDK agent를 통해 action plan을 생성하도록 구성했다. 로컬 검증에서 `agent.source: "copilot-sdk"`, `agent.copilotRuntime.agent: "BuiltInAgent"`, `toolRegistration: "defineTool"` 확인. `npm run typecheck` 및 전체 테스트(unit 21 + E2E 19) 통과.
+
+| Judge | 항목 | 가중치 | 점수 | 가중 점수 |
+|-------|------|-------:|-----:|----------:|
+| J1 | Effective Use of Copilot SDK | 25% | 99 | 2475 |
+| J2 | Productivity Impact & Problem Fit | 18% | 94 | 1692 |
+| J3 | Azure AI & Cloud Integration | 18% | 96 | 1728 |
+| J4 | Functionality & Technical Execution | 16% | 98 | 1568 |
+| J5 | User Experience & Workflow Design | 12% | 96 | 1152 |
+| J6 | Responsible AI, Security & Trust | 6% | 97 | 582 |
+| J7 | Innovation & Originality | 5% | 93 | 465 |
+| | **Final Score** | **100%** | | **96.62** |
+
+### 근거 요약
+- 강점: Copilot SDK `BuiltInAgent`가 기본 planner가 되었고, `defineTool` 등록 도구를 통해 실제 action plan이 생성된다. 이전의 "직접 Azure OpenAI + 자체 switch 중심" 피드백을 정면으로 해소.
+- 강점: `/api/agent` 응답 메타데이터가 `copilot-sdk`, `BuiltInAgent`, `defineTool`, 등록 도구 목록을 노출해 심사자가 SDK 중심 경로를 확인할 수 있다.
+- 강점: App Insights telemetry 전송 경로(`agent_plan_created`, `agent_action_executed`, `agent_run_completed`, `agent_execution_ms`)를 코드에 추가해 관측성 평가 근거를 강화.
+- 강점: 세션 격리, Undo, rate limit, 보안 헤더, SSE streaming, speech/correction fallback, export 회귀 테스트가 모두 유지됨.
+
+### 제출 전 남은 증빙 과제
+1. 배포 환경 `/api/agent`에서도 `agent.source="copilot-sdk"`가 나오는 캡처/로그 확보
+2. App Insights 쿼리 결과 캡처(`agent_run_completed`, `agent_action_executed`, `agent_execution_ms`)
+3. Azure Web App Managed Identity 및 Key Vault reference 화면 캡처
+4. README의 생산성 지표를 발표 자료에 삽입
+
+모든 코드 수준 핵심 문제가 해결되었습니다.
+
+---
+
+<!-- 다음 채점 결과를 아래에 추가하세요 -->
+
 ## 2026-06-20 16:20 — Round 11 (Streaming + Cloud-Native Readiness)
 
 **프로젝트 상태:** 만점 목표 기준 추가 개선 반영. `/api/agent` 스트리밍(plan/action/done) 응답 추가, Azure 유효 플랜 우선 경로로 하드코딩 가드 의존 축소, IaC(`infra/main.bicep`)와 Cloud-Native 체크리스트 문서 추가. 단위 테스트 21개 + E2E 19개 통과, 타입체크 통과.

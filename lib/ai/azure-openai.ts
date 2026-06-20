@@ -7,6 +7,7 @@ export type AgentToolAction = {
     | "create_hackathon_flow"
     | "create_diagram"
     | "add_node"
+    | "insert_node_between"
     | "connect"
     | "relabel"
     | "remove"
@@ -23,6 +24,8 @@ export type AgentToolAction = {
   shape?: "rect" | "round" | "diamond";
   from?: string;
   to?: string;
+  after?: string;
+  before?: string;
   ref?: string;
   newLabel?: string;
   direction?: "TD" | "LR";
@@ -157,6 +160,18 @@ function normalizeAction(value: unknown): AgentToolAction | null {
       return {
         tool: "add_participant",
         label: asOptionalString(action.label),
+      };
+    case "insert_node_between":
+      if (!asOptionalString(action.after) || !asOptionalString(action.before) || !asOptionalString(action.label)) {
+        return null;
+      }
+
+      return {
+        tool: "insert_node_between",
+        after: asOptionalString(action.after),
+        before: asOptionalString(action.before),
+        label: asOptionalString(action.label),
+        shape: isShape(action.shape) ? action.shape : "rect",
       };
     case "connect":
       if (!asOptionalString(action.from) || !asOptionalString(action.to)) {

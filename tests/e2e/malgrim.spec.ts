@@ -35,6 +35,22 @@ test("switches the current flowchart to a sequence diagram", async ({ page }) =>
   await expect(page.getByText("switch_type").first()).toBeVisible();
 });
 
+test("adds a score measurement step after deployment", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByLabel("텍스트 명령").fill("해커톤 진행 프로세스를 플로우차트로 생성해줘");
+  await page.getByRole("button", { name: "명령 실행" }).click();
+  await expect(page.locator("pre")).toContainText("n5 --> n6");
+
+  await page.getByLabel("텍스트 명령").fill("배포 후에 점수를 측정하는 단계를 추가해줘");
+  await page.getByRole("button", { name: "명령 실행" }).click();
+
+  await expect(page.locator("pre")).toContainText("점수 측정");
+  await expect(page.locator("pre")).not.toContainText("n5 --> n6");
+  await expect(page.getByText("에이전트가 실행할 도구를 선택하지 못했습니다.")).toHaveCount(0);
+  await expect(page.getByText("insert_node_between").first()).toBeVisible();
+});
+
 test("asks for confirmation before clearing and then clears the diagram", async ({ page }) => {
   await page.goto("/");
 

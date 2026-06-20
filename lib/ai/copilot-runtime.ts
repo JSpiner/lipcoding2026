@@ -6,6 +6,7 @@ export const copilotToolNames = [
   "add_payment_failure_branch",
   "create_diagram",
   "add_node",
+  "insert_node_between",
   "add_participant",
   "connect",
   "relabel",

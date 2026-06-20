@@ -8,6 +8,7 @@ import {
   createHackathonFlow,
   createOrderFlow,
   exportDiagram,
+  insertNodeBetween,
   relabel,
   removeElement,
   setDirection,
@@ -72,6 +73,13 @@ function applyDeterministicGuards(command: string, ir: ReturnType<typeof getDiag
     return normalizePlan({ summary: "현재 다이어그램을 플로우차트로 전환합니다.", actions: [{ tool: "switch_type", target: "flowchart" }] }, plan.source);
   }
 
+  if (ir?.type === "flowchart" && hasAny(normalized, ["배포후", "배포다음", "배포뒤"]) && hasAny(normalized, ["점수", "측정", "평가"])) {
+    return normalizePlan(
+      { summary: "배포 후에 점수를 측정하는 단계를 추가합니다.", actions: [{ tool: "insert_node_between", after: "배포", before: "데모 발표", label: "점수 측정" }] },
+      plan.source,
+    );
+  }
+
   return plan;
 }
 
@@ -108,6 +116,10 @@ function executeAction(action: AgentToolAction): ToolResult {
       return addPaymentFailureBranch(ir);
     case "add_node":
       return action.label ? addNode(ir, action.label, action.shape ?? "rect") : fallbackResult(ir, "노드 라벨이 없어 add_node를 실행하지 않았습니다.");
+    case "insert_node_between":
+      return action.after && action.before && action.label
+        ? insertNodeBetween(ir, action.after, action.before, action.label, action.shape ?? "rect")
+        : fallbackResult(ir, "삽입할 위치나 라벨이 없어 insert_node_between을 실행하지 않았습니다.");
     case "add_participant":
       return action.label ? addParticipant(ir, action.label) : fallbackResult(ir, "참여자 라벨이 없어 add_participant를 실행하지 않았습니다.");
     case "connect":
@@ -154,6 +166,13 @@ function planWithLocalFallback(command: string): AgentPlan {
 
   if (hasAny(normalized, ["결제실패", "실패분기", "재시도"])) {
     return normalizePlan({ summary: "결제 실패 분기와 재시도 루프를 추가합니다.", actions: [{ tool: "add_payment_failure_branch" }] }, "local-fallback");
+  }
+
+  if (hasAny(normalized, ["배포후", "배포다음", "배포뒤"]) && hasAny(normalized, ["점수", "측정", "평가"])) {
+    return normalizePlan(
+      { summary: "배포 후에 점수를 측정하는 단계를 추가합니다.", actions: [{ tool: "insert_node_between", after: "배포", before: "데모 발표", label: "점수 측정" }] },
+      "local-fallback",
+    );
   }
 
   if (hasAny(normalized, ["카트확인", "장바구니를카트", "장바구니단계이름"])) {

@@ -110,6 +110,43 @@ export function connect(ir: DiagramIR | null, fromRef: string, toRef: string, la
   };
 }
 
+export function insertNodeBetween(ir: DiagramIR | null, afterRef: string, beforeRef: string, label: string, shape: "rect" | "round" | "diamond" = "rect"): ToolResult {
+  const flowchart = ensureFlowchart(ir);
+  const after = resolveRef(afterRef, flowchart);
+  const before = resolveRef(beforeRef, flowchart);
+
+  if (!after || !before) {
+    return {
+      ir: flowchart,
+      logs: [{ tool: "insert_node_between", summary: "삽입할 위치를 찾지 못해 변경하지 않았습니다." }],
+    };
+  }
+
+  if (flowchart.nodes.some((node) => node.label === label)) {
+    return {
+      ir: flowchart,
+      logs: [{ tool: "insert_node_between", summary: `"${label}" 단계가 이미 있어 그대로 두었습니다.` }],
+    };
+  }
+
+  const nodeId = nextNodeId(flowchart);
+  const edgeToInserted = nextEdgeId(flowchart);
+  const edgeFromInserted = nextEdgeId({ ...flowchart, edges: [...flowchart.edges, { id: edgeToInserted, from: after, to: nodeId }] });
+
+  return {
+    ir: {
+      ...flowchart,
+      nodes: [...flowchart.nodes, { id: nodeId, label, shape }],
+      edges: [
+        ...flowchart.edges.filter((edge) => !(edge.from === after && edge.to === before)),
+        { id: edgeToInserted, from: after, to: nodeId },
+        { id: edgeFromInserted, from: nodeId, to: before },
+      ],
+    },
+    logs: [{ tool: "insert_node_between", summary: `"${afterRef}" 다음에 "${label}" 단계를 추가했습니다.` }],
+  };
+}
+
 export function relabel(ir: DiagramIR | null, ref: string, newLabel: string): ToolResult {
   if (ir?.type === "sequence") {
     const id = resolveRef(ref, ir);

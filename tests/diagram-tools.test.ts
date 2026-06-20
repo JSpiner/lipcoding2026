@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { resolveRef } from "../lib/diagram/resolver";
-import { addNode, connect, createHackathonFlow, createOrderFlow, relabel, setDirection, switchType } from "../lib/diagram/tools";
+import { addNode, connect, createHackathonFlow, createOrderFlow, insertNodeBetween, relabel, setDirection, switchType } from "../lib/diagram/tools";
 import type { DiagramIR } from "../lib/diagram/types";
 
 test("resolveRef ignores empty references", () => {
@@ -42,6 +42,26 @@ test("flowchart tools edit nodes and edges by natural references", () => {
     ["시작", "요구사항 검토"],
   );
   assert.equal(ir.edges[0].label, "진행");
+});
+
+test("inserts a scoring step between deploy and demo without leaving the old edge", () => {
+  const ir = insertNodeBetween(createHackathonFlow().ir, "배포", "데모 발표", "점수 측정").ir;
+
+  assert.equal(ir?.type, "flowchart");
+  if (ir?.type !== "flowchart") {
+    throw new Error("expected flowchart");
+  }
+
+  const scoring = ir.nodes.find((node) => node.label === "점수 측정");
+  const deploy = ir.nodes.find((node) => node.label === "배포");
+  const demo = ir.nodes.find((node) => node.label === "데모 발표");
+
+  assert.ok(scoring);
+  assert.ok(deploy);
+  assert.ok(demo);
+  assert.ok(ir.edges.some((edge) => edge.from === deploy.id && edge.to === scoring.id));
+  assert.ok(ir.edges.some((edge) => edge.from === scoring.id && edge.to === demo.id));
+  assert.equal(ir.edges.some((edge) => edge.from === deploy.id && edge.to === demo.id), false);
 });
 
 test("switchType converts flowcharts to sequence diagrams and preserves labels", () => {

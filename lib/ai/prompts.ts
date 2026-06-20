@@ -19,6 +19,7 @@ Allowed tools:
 - create_hackathon_flow: create the hackathon progress flowchart demo.
 - create_diagram: args { "type": "flowchart" | "sequence", "title"?: string }.
 - add_node: args { "label": string, "shape"?: "rect" | "round" | "diamond" }.
+- insert_node_between: args { "after": string, "before": string, "label": string, "shape"?: "rect" | "round" | "diamond" }. Use this to insert a new flowchart step between two existing steps.
 - add_participant: args { "label": string }. Use this for sequence diagrams.
 - connect: args { "from": string, "to": string, "label"?: string }.
 - relabel: args { "ref": string, "newLabel": string }.

@@ -1,0 +1,15 @@
+HTTP/1.1 200 OK
+Content-Length: 8024
+Content-Type: text/html; charset=utf-8
+Date: Sat, 20 Jun 2026 06:37:38 GMT
+Cache-Control: s-maxage=31536000
+ETag: "11et7hffpeh5uw"
+Set-Cookie: ARRAffinity=12294b2e6f4d4f4a22d10b0dcc5d414e0d16ab6c85f1b08034605c6d1bacde0d;Path=/;HttpOnly;Secure;Domain=malgrim-web-06201224.azurewebsites.net
+Set-Cookie: ARRAffinitySameSite=12294b2e6f4d4f4a22d10b0dcc5d414e0d16ab6c85f1b08034605c6d1bacde0d;Path=/;HttpOnly;SameSite=None;Secure;Domain=malgrim-web-06201224.azurewebsites.net
+Vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-nextjs-cache: HIT
+x-nextjs-prerender: 1
+x-nextjs-prerender: 1
+x-nextjs-stale-time: 300
+X-Powered-By: Next.js
+

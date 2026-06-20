@@ -51,6 +51,44 @@ test("adds a score measurement step after deployment", async ({ page }) => {
   await expect(page.getByText("insert_node_between").first()).toBeVisible();
 });
 
+test("inserts a user interview step before requirements", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByLabel("텍스트 명령").fill("해커톤 진행 프로세스를 플로우차트로 생성해줘");
+  await page.getByRole("button", { name: "명령 실행" }).click();
+  await expect(page.locator("pre")).toContainText("n1 --> n2");
+
+  await page.getByLabel("텍스트 명령").fill("요구사항 정리 전에 유저 인터뷰 단계를 추가해줘");
+  await page.getByRole("button", { name: "명령 실행" }).click();
+
+  await expect(page.locator("pre")).toContainText("유저 인터뷰");
+  await expect(page.locator("pre")).not.toContainText("n1 --> n2");
+  await expect(page.locator("pre")).toContainText("n1 --> n7");
+  await expect(page.locator("pre")).toContainText("n7 --> n2");
+  await expect(page.getByText("에이전트가 실행할 도구를 선택하지 못했습니다.")).toHaveCount(0);
+  await expect(page.getByText("insert_node_between").first()).toBeVisible();
+});
+
+test("adds a score and improvement cycle from the testing step", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByLabel("텍스트 명령").fill("해커톤 진행 프로세스를 플로우차트로 생성해줘");
+  await page.getByRole("button", { name: "명령 실행" }).click();
+  await expect(page.locator("pre")).toContainText("n4 --> n5");
+
+  await page.getByLabel("텍스트 명령").fill("테스트와 보완 단계에서 점수를 측정하고 개선하는 사이클을 추가해줘");
+  await page.getByRole("button", { name: "명령 실행" }).click();
+
+  await expect(page.locator("pre")).toContainText("점수 측정");
+  await expect(page.locator("pre")).toContainText("개선");
+  await expect(page.locator("pre")).toContainText("n4 --> n5");
+  await expect(page.locator("pre")).toContainText("n4 --> n7");
+  await expect(page.locator("pre")).toContainText("n7 --> n8");
+  await expect(page.locator("pre")).toContainText("n8 --> n4");
+  await expect(page.getByText("에이전트가 실행할 도구를 선택하지 못했습니다.")).toHaveCount(0);
+  await expect(page.getByText("add_feedback_cycle").first()).toBeVisible();
+});
+
 test("asks for confirmation before clearing and then clears the diagram", async ({ page }) => {
   await page.goto("/");
 

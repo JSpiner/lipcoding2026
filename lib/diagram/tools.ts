@@ -147,6 +147,46 @@ export function insertNodeBetween(ir: DiagramIR | null, afterRef: string, before
   };
 }
 
+export function addFeedbackCycle(ir: DiagramIR | null, anchorRef: string, labels: string[] = ["점수 측정", "개선"]): ToolResult {
+  const flowchart = ensureFlowchart(ir);
+  const anchor = resolveRef(anchorRef, flowchart);
+  const cycleLabels = labels.map((label) => label.trim()).filter(Boolean);
+
+  if (!anchor || cycleLabels.length === 0) {
+    return {
+      ir: flowchart,
+      logs: [{ tool: "add_feedback_cycle", summary: "피드백 사이클을 연결할 기준 단계를 찾지 못했습니다." }],
+    };
+  }
+
+  let nodes = [...flowchart.nodes];
+  let edges = [...flowchart.edges];
+  const cycleNodeIds = cycleLabels.map((label) => {
+    const existing = nodes.find((node) => normalizeLabel(node.label) === normalizeLabel(label));
+
+    if (existing) {
+      return existing.id;
+    }
+
+    const id = nextNodeId({ ...flowchart, nodes });
+    nodes = [...nodes, { id, label }];
+    return id;
+  });
+
+  const pairs = [[anchor, cycleNodeIds[0]], ...cycleNodeIds.slice(0, -1).map((id, index) => [id, cycleNodeIds[index + 1]]), [cycleNodeIds[cycleNodeIds.length - 1], anchor]];
+
+  for (const [from, to] of pairs) {
+    if (!edges.some((edge) => edge.from === from && edge.to === to)) {
+      edges = [...edges, { id: nextEdgeId({ ...flowchart, edges }), from, to }];
+    }
+  }
+
+  return {
+    ir: { ...flowchart, nodes, edges },
+    logs: [{ tool: "add_feedback_cycle", summary: `"${anchorRef}" 단계에 ${cycleLabels.join(" -> ")} 피드백 사이클을 추가했습니다.` }],
+  };
+}
+
 export function relabel(ir: DiagramIR | null, ref: string, newLabel: string): ToolResult {
   if (ir?.type === "sequence") {
     const id = resolveRef(ref, ir);
@@ -415,4 +455,8 @@ function maxNumericSuffix(ids: string[]): number {
     const value = Number(id.replace(/^\D+/, ""));
     return Number.isFinite(value) ? Math.max(max, value) : max;
   }, 0);
+}
+
+function normalizeLabel(value: string): string {
+  return value.replace(/\s+/g, "").toLowerCase();
 }

@@ -21,6 +21,7 @@ test("normalizePlan keeps valid tool calls and normalizes option values", () => 
       actions: [
         { tool: "add_node", label: "아이디어 선정", shape: "circle" },
         { tool: "insert_node_between", after: "배포", before: "데모 발표", label: "점수 측정" },
+        { tool: "add_feedback_cycle", ref: "테스트와 보완", labels: ["점수 측정", "개선"] },
         { tool: "connect", from: "아이디어 선정", to: "요구사항 정리", label: "다음" },
         { tool: "switch_type", target: "sequence" },
         { tool: "export", format: "png" },
@@ -32,6 +33,7 @@ test("normalizePlan keeps valid tool calls and normalizes option values", () => 
   assert.deepEqual(plan.actions, [
     { tool: "add_node", label: "아이디어 선정", shape: "rect" },
     { tool: "insert_node_between", after: "배포", before: "데모 발표", label: "점수 측정", shape: "rect" },
+    { tool: "add_feedback_cycle", ref: "테스트와 보완", labels: ["점수 측정", "개선"] },
     { tool: "connect", from: "아이디어 선정", to: "요구사항 정리", label: "다음" },
     { tool: "switch_type", target: "sequence" },
     { tool: "export", format: "png" },

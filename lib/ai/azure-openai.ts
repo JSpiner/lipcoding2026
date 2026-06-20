@@ -8,6 +8,7 @@ export type AgentToolAction = {
     | "create_diagram"
     | "add_node"
     | "insert_node_between"
+    | "add_feedback_cycle"
     | "connect"
     | "relabel"
     | "remove"
@@ -21,6 +22,7 @@ export type AgentToolAction = {
   type?: "flowchart" | "sequence";
   title?: string;
   label?: string;
+  labels?: string[];
   shape?: "rect" | "round" | "diamond";
   from?: string;
   to?: string;
@@ -173,6 +175,16 @@ function normalizeAction(value: unknown): AgentToolAction | null {
         label: asOptionalString(action.label),
         shape: isShape(action.shape) ? action.shape : "rect",
       };
+    case "add_feedback_cycle":
+      if (!asOptionalString(action.ref)) {
+        return null;
+      }
+
+      return {
+        tool: "add_feedback_cycle",
+        ref: asOptionalString(action.ref),
+        labels: asStringArray(action.labels) ?? ["점수 측정", "개선"],
+      };
     case "connect":
       if (!asOptionalString(action.from) || !asOptionalString(action.to)) {
         return null;
@@ -225,6 +237,15 @@ function normalizeAction(value: unknown): AgentToolAction | null {
 
 function asOptionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function asStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const values = value.filter((item): item is string => typeof item === "string" && Boolean(item.trim())).map((item) => item.trim());
+  return values.length ? values : undefined;
 }
 
 function isDiagramType(value: unknown): value is "flowchart" | "sequence" {

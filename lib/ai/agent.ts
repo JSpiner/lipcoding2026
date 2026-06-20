@@ -1,4 +1,5 @@
 import {
+  addFeedbackCycle,
   addNode,
   addParticipant,
   addPaymentFailureBranch,
@@ -60,6 +61,7 @@ async function planCommand(command: string, ir: ReturnType<typeof getDiagramIR>)
 
 function applyDeterministicGuards(command: string, ir: ReturnType<typeof getDiagramIR>, plan: AgentPlan): AgentPlan {
   const normalized = command.replace(/\s+/g, "").toLowerCase();
+  const combined = `${command} ${plan.summary}`.replace(/\s+/g, "").toLowerCase();
 
   if (hasAny(normalized, ["해커톤", "해코톤", "hackathon"])) {
     return normalizePlan({ summary: "해커톤 진행 프로세스를 플로우차트로 생성합니다.", actions: [{ tool: "create_hackathon_flow" }] }, plan.source);
@@ -78,6 +80,20 @@ function applyDeterministicGuards(command: string, ir: ReturnType<typeof getDiag
       { summary: "배포 후에 점수를 측정하는 단계를 추가합니다.", actions: [{ tool: "insert_node_between", after: "배포", before: "데모 발표", label: "점수 측정" }] },
       plan.source,
     );
+  }
+
+  if (ir?.type === "flowchart" && hasAny(combined, ["사이클", "루프", "반복"]) && hasAny(combined, ["점수", "측정", "평가"]) && hasAny(combined, ["개선", "보완"])) {
+    const anchor = findMentionedFlowchartLabel(ir, combined) ?? "테스트와 보완";
+
+    return normalizePlan(
+      { summary: `${anchor} 단계에 점수 측정과 개선 피드백 사이클을 추가합니다.`, actions: [{ tool: "add_feedback_cycle", ref: anchor, labels: ["점수 측정", "개선"] }] },
+      plan.source,
+    );
+  }
+
+  const insertionPlan = inferFlowchartInsertionPlan(command, plan.summary, ir, plan.source);
+  if (insertionPlan) {
+    return insertionPlan;
   }
 
   return plan;
@@ -116,6 +132,8 @@ function executeAction(action: AgentToolAction): ToolResult {
       return addPaymentFailureBranch(ir);
     case "add_node":
       return action.label ? addNode(ir, action.label, action.shape ?? "rect") : fallbackResult(ir, "노드 라벨이 없어 add_node를 실행하지 않았습니다.");
+    case "add_feedback_cycle":
+      return action.ref ? addFeedbackCycle(ir, action.ref, action.labels) : fallbackResult(ir, "기준 단계가 없어 add_feedback_cycle을 실행하지 않았습니다.");
     case "insert_node_between":
       return action.after && action.before && action.label
         ? insertNodeBetween(ir, action.after, action.before, action.label, action.shape ?? "rect")
@@ -175,6 +193,18 @@ function planWithLocalFallback(command: string): AgentPlan {
     );
   }
 
+  if (hasAny(normalized, ["사이클", "루프", "반복"]) && hasAny(normalized, ["점수", "측정", "평가"]) && hasAny(normalized, ["개선", "보완"])) {
+    return normalizePlan(
+      { summary: "테스트와 보완 단계에 점수 측정과 개선 피드백 사이클을 추가합니다.", actions: [{ tool: "add_feedback_cycle", ref: "테스트와 보완", labels: ["점수 측정", "개선"] }] },
+      "local-fallback",
+    );
+  }
+
+  const insertionPlan = inferFlowchartInsertionPlan(command, "", getDiagramIR(), "local-fallback");
+  if (insertionPlan) {
+    return insertionPlan;
+  }
+
   if (hasAny(normalized, ["카트확인", "장바구니를카트", "장바구니단계이름"])) {
     return normalizePlan({ summary: "장바구니 단계 이름을 변경합니다.", actions: [{ tool: "relabel", ref: "장바구니", newLabel: "카트 확인" }] }, "local-fallback");
   }
@@ -204,6 +234,108 @@ function planWithLocalFallback(command: string): AgentPlan {
 
 function hasAny(value: string, needles: string[]): boolean {
   return needles.some((needle) => value.includes(needle.toLowerCase()));
+}
+
+function findMentionedFlowchartLabel(ir: ReturnType<typeof getDiagramIR>, normalizedText: string): string | null {
+  if (ir?.type !== "flowchart") {
+    return null;
+  }
+
+  const nodesBySpecificity = [...ir.nodes].sort((left, right) => right.label.length - left.label.length);
+  const match = nodesBySpecificity.find((node) => normalizedText.includes(node.label.replace(/\s+/g, "").toLowerCase()));
+  return match?.label ?? null;
+}
+
+function inferFlowchartInsertionPlan(command: string, summary: string, ir: ReturnType<typeof getDiagramIR>, source: AgentPlan["source"]): AgentPlan | null {
+  if (ir?.type !== "flowchart") {
+    return null;
+  }
+
+  const text = `${command} ${summary}`.replace(/\s+/g, "").toLowerCase();
+  if (!hasAny(text, ["추가", "넣", "삽입"])) {
+    return null;
+  }
+
+  const nodesBySpecificity = [...ir.nodes].sort((left, right) => right.label.length - left.label.length);
+
+  for (const node of nodesBySpecificity) {
+    const anchor = node.label.replace(/\s+/g, "").toLowerCase();
+    const beforeMarker = firstIncluded(text, [`${anchor}전에`, `${anchor}이전에`, `${anchor}앞에`]);
+    if (beforeMarker) {
+      const label = extractInsertedLabel(text.slice(text.indexOf(beforeMarker) + beforeMarker.length), ir);
+      const predecessor = findSinglePredecessor(ir, node.id);
+
+      if (label && predecessor) {
+        return normalizePlan(
+          { summary: `${node.label} 전에 ${label} 단계를 추가합니다.`, actions: [{ tool: "insert_node_between", after: predecessor.label, before: node.label, label }] },
+          source,
+        );
+      }
+    }
+
+    const afterMarker = firstIncluded(text, [`${anchor}후에`, `${anchor}이후에`, `${anchor}다음에`, `${anchor}뒤에`]);
+    if (afterMarker) {
+      const label = extractInsertedLabel(text.slice(text.indexOf(afterMarker) + afterMarker.length), ir);
+      const successor = findSingleSuccessor(ir, node.id);
+
+      if (label && successor) {
+        return normalizePlan(
+          { summary: `${node.label} 다음에 ${label} 단계를 추가합니다.`, actions: [{ tool: "insert_node_between", after: node.label, before: successor.label, label }] },
+          source,
+        );
+      }
+    }
+  }
+
+  return null;
+}
+
+function firstIncluded(value: string, candidates: string[]): string | null {
+  return candidates.find((candidate) => value.includes(candidate)) ?? null;
+}
+
+function findSinglePredecessor(ir: Extract<ReturnType<typeof getDiagramIR>, { type: "flowchart" }>, nodeId: string) {
+  const incoming = ir.edges.filter((edge) => edge.to === nodeId);
+  if (incoming.length !== 1) {
+    return null;
+  }
+
+  return ir.nodes.find((node) => node.id === incoming[0].from) ?? null;
+}
+
+function findSingleSuccessor(ir: Extract<ReturnType<typeof getDiagramIR>, { type: "flowchart" }>, nodeId: string) {
+  const outgoing = ir.edges.filter((edge) => edge.from === nodeId);
+  if (outgoing.length !== 1) {
+    return null;
+  }
+
+  return ir.nodes.find((node) => node.id === outgoing[0].to) ?? null;
+}
+
+function extractInsertedLabel(textAfterMarker: string, ir: Extract<ReturnType<typeof getDiagramIR>, { type: "flowchart" }>): string | null {
+  const raw = textAfterMarker
+    .replace(/(단계)?(를|을)?(추가|삽입|넣).*/, "")
+    .replace(/^(새로운|새|신규)/, "")
+    .replace(/단계$/, "")
+    .trim();
+
+  if (!raw || ir.nodes.some((node) => node.label.replace(/\s+/g, "").toLowerCase() === raw)) {
+    return null;
+  }
+
+  return formatInsertedLabel(raw);
+}
+
+function formatInsertedLabel(value: string): string {
+  const knownLabels: Record<string, string> = {
+    유저인터뷰: "유저 인터뷰",
+    사용자인터뷰: "사용자 인터뷰",
+    점수측정: "점수 측정",
+    요구사항검증: "요구사항 검증",
+    시장조사: "시장 조사",
+  };
+
+  return knownLabels[value] ?? value;
 }
 
 export function confirmAgentClear(): AgentRunResult {

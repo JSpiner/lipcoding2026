@@ -7,6 +7,7 @@ export const copilotToolNames = [
   "create_diagram",
   "add_node",
   "insert_node_between",
+  "add_feedback_cycle",
   "add_participant",
   "connect",
   "relabel",

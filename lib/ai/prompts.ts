@@ -20,6 +20,7 @@ Allowed tools:
 - create_diagram: args { "type": "flowchart" | "sequence", "title"?: string }.
 - add_node: args { "label": string, "shape"?: "rect" | "round" | "diamond" }.
 - insert_node_between: args { "after": string, "before": string, "label": string, "shape"?: "rect" | "round" | "diamond" }. Use this to insert a new flowchart step between two existing steps.
+- add_feedback_cycle: args { "ref": string, "labels"?: string[] }. Use this to add a feedback loop from an existing flowchart step through new cycle steps and back to that step.
 - add_participant: args { "label": string }. Use this for sequence diagrams.
 - connect: args { "from": string, "to": string, "label"?: string }.
 - relabel: args { "ref": string, "newLabel": string }.

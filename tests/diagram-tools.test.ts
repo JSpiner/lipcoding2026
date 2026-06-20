@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { resolveRef } from "../lib/diagram/resolver";
-import { addNode, connect, createHackathonFlow, createOrderFlow, insertNodeBetween, relabel, setDirection, switchType } from "../lib/diagram/tools";
+import { addFeedbackCycle, addNode, connect, createHackathonFlow, createOrderFlow, insertNodeBetween, relabel, setDirection, switchType } from "../lib/diagram/tools";
 import type { DiagramIR } from "../lib/diagram/types";
 
 test("resolveRef ignores empty references", () => {
@@ -62,6 +62,29 @@ test("inserts a scoring step between deploy and demo without leaving the old edg
   assert.ok(ir.edges.some((edge) => edge.from === deploy.id && edge.to === scoring.id));
   assert.ok(ir.edges.some((edge) => edge.from === scoring.id && edge.to === demo.id));
   assert.equal(ir.edges.some((edge) => edge.from === deploy.id && edge.to === demo.id), false);
+});
+
+test("adds a scoring and improvement feedback cycle while keeping the main flow", () => {
+  const ir = addFeedbackCycle(createHackathonFlow().ir, "테스트와 보완", ["점수 측정", "개선"]).ir;
+
+  assert.equal(ir?.type, "flowchart");
+  if (ir?.type !== "flowchart") {
+    throw new Error("expected flowchart");
+  }
+
+  const testing = ir.nodes.find((node) => node.label === "테스트와 보완");
+  const scoring = ir.nodes.find((node) => node.label === "점수 측정");
+  const improving = ir.nodes.find((node) => node.label === "개선");
+  const deploy = ir.nodes.find((node) => node.label === "배포");
+
+  assert.ok(testing);
+  assert.ok(scoring);
+  assert.ok(improving);
+  assert.ok(deploy);
+  assert.ok(ir.edges.some((edge) => edge.from === testing.id && edge.to === scoring.id));
+  assert.ok(ir.edges.some((edge) => edge.from === scoring.id && edge.to === improving.id));
+  assert.ok(ir.edges.some((edge) => edge.from === improving.id && edge.to === testing.id));
+  assert.ok(ir.edges.some((edge) => edge.from === testing.id && edge.to === deploy.id));
 });
 
 test("switchType converts flowcharts to sequence diagrams and preserves labels", () => {
